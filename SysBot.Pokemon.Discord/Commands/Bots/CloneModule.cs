@@ -41,6 +41,17 @@ namespace SysBot.Pokemon.Discord
             await CloneAsync(code).ConfigureAwait(false);
         }
 
+        [Command("fixads")]
+        [Alias("fix")]
+        [Summary("Fixes OT and Nickname of a Pokémon you show via Link Trade if an advert is detected.")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task FixAdOT()
+        {
+            var code = Info.GetRandomTradeCode();
+            bool sudo = Context.User.GetIsSudo();
+            await Context.AddToQueueAsync(code, Context.User.Username, sudo, new PK8(), PokeRoutineType.Clone, PokeTradeType.FixAdOT).ConfigureAwait(false);
+        }
+
         [Command("cloneList")]
         [Alias("cl", "cq")]
         [Summary("Prints the users in the Clone queue.")]

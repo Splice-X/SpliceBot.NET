@@ -53,10 +53,10 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("The Switch profile you are using to manage friends. For example, set this to 2 if you are using the second profile.")]
         public int ProfileNumber { get; set; } = 1;
 
-        [Category(FeatureToggle), Description("When set, the bot will create a text file with current Raid Code for OBS.")]
+        [Category(Hosting), Description("When set, the bot will create a text file with current Raid Code for OBS.")]
         public bool RaidLog { get; set; } = false;
 
-        [Category(FeatureToggle), Description("When set, the bot will roll species and set date to 2000, resetting it once it reaches 2060.")]
+        [Category(Hosting), Description("When set, the bot will roll species and set date to 2000, resetting it once it reaches 2060.")]
         public bool AutoRoll { get; set; } = false;
 
         [Category(Hosting), Description("Extra time in milliseconds to enter the initial lobby for AutoRoll. First lobby can be slower than subsequent ones.")]
