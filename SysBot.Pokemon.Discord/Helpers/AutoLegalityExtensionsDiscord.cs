@@ -7,6 +7,8 @@ namespace SysBot.Pokemon.Discord
 {
     public static class AutoLegalityExtensionsDiscord
     {
+        public static string OT = string.Empty;
+
         public static async Task ReplyWithLegalizedSetAsync(this ISocketMessageChannel channel, ITrainerInfo sav, ShowdownSet set)
         {
             if (set.Species <= 0)
@@ -17,6 +19,19 @@ namespace SysBot.Pokemon.Discord
 
             var template = AutoLegalityWrapper.GetTemplate(set);
             var pkm = sav.GetLegal(template, out var result);
+
+            if (SysCordInstance.Self.Hub.Config.Trade.EggTrade && pkm.Nickname == "Egg")
+                TradeModule.EggTrade((PK8)pkm);
+
+            if (SysCordInstance.Self.Hub.Config.Trade.DittoTrade && set.Species == 132)
+                TradeModule.DittoTrade(pkm);
+
+            if (OT != string.Empty)
+            {
+                pkm.OT_Name = OT;
+                OT = string.Empty;
+            }
+
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];
 
@@ -37,6 +52,9 @@ namespace SysBot.Pokemon.Discord
         public static async Task ReplyWithLegalizedSetAsync(this ISocketMessageChannel channel, string content)
         {
             content = ReusableActions.StripCodeBlock(content);
+            TradeModule.SpecifyOT(content, out string specifyOT);
+            if (specifyOT != string.Empty)
+                OT = specifyOT;
             var set = new ShowdownSet(content);
             var sav = AutoLegalityWrapper.GetTrainerInfo(set.Format);
             await channel.ReplyWithLegalizedSetAsync(sav, set).ConfigureAwait(false);

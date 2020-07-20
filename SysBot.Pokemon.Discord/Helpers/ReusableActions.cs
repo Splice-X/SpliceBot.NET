@@ -66,8 +66,18 @@ namespace SysBot.Pokemon.Discord
 
         public static string GetFormattedShowdownText(PKM pkm)
         {
+            var newShowdown = new List<string>();
             var showdown = ShowdownSet.GetShowdownText(pkm);
-            return Format.Code(showdown);
+            foreach (var line in showdown.Split('\n'))
+                newShowdown.Add(line);
+
+            if (pkm.IsEgg)
+                newShowdown.Add("\nPokémon is an egg");
+            if (pkm.Ball > (int)Ball.None)
+                newShowdown.Insert(newShowdown.FindIndex(z => z.Contains(" Nature")), $"Ball: {(Ball)pkm.Ball} Ball");
+
+            newShowdown.Insert(1, $"OT: {pkm.OT_Name}");
+            return Format.Code(string.Join("\n", newShowdown).TrimEnd());
         }
 
         public static List<string> GetListFromString(string str)

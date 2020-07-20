@@ -61,6 +61,10 @@ namespace SysBot.Pokemon.Discord
         {
             const int gen = 8;
             content = ReusableActions.StripCodeBlock(content);
+            SpecifyOT(content, out string specifyOT);
+            if (specifyOT != string.Empty)
+                content = System.Text.RegularExpressions.Regex.Replace(content, @"OT: +(\w*)", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+
             var set = new ShowdownSet(content);
             var template = AutoLegalityWrapper.GetTemplate(set);
             if (Info.Hub.Config.Trade.Memes)
@@ -79,6 +83,9 @@ namespace SysBot.Pokemon.Discord
             var sav = AutoLegalityWrapper.GetTrainerInfo(gen);
 
             var pkm = sav.GetLegal(template, out _);
+            if (specifyOT != string.Empty)
+                pkm.OT_Name = specifyOT;
+
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];
             var invalid = !(pkm is PK8) || (!la.Valid && SysCordInstance.Self.Hub.Config.Legality.VerifyLegality);
@@ -114,6 +121,161 @@ namespace SysBot.Pokemon.Discord
             await TradeAsyncAttach(code).ConfigureAwait(false);
         }
 
+        [Command("eggroll")]
+        [Alias("roll")]
+        [Summary("Makes the bot trade you a randomly generated egg.")]
+        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        public async Task EggRaffleAsync()
+        {
+            if (!Info.Hub.Config.Trade.EggRaffle)
+            {
+                await ReplyAsync($"EggRaffle is currently disabled!").ConfigureAwait(false);
+                return;
+            }
+            else if (!Info.Hub.Config.Trade.EggRaffleChannels.Contains(Context.Channel.Id.ToString()) && !Info.Hub.Config.Trade.EggRaffleChannels.Equals(""))
+            {
+                await ReplyAsync($"You're typing the command in the wrong channel!").ConfigureAwait(false);
+                return;
+            }
+
+            if (Info.Hub.Config.Trade.EggRaffleCooldown < 0)
+                Info.Hub.Config.Trade.EggRaffleCooldown = default;
+
+            if (!System.IO.File.Exists("EggRngBlacklist.txt"))
+                System.IO.File.Create("EggRngBlacklist.txt").Close();
+
+            System.IO.StreamReader reader = new System.IO.StreamReader("EggRngBlacklist.txt");
+            var content = reader.ReadToEnd();
+            reader.Close();
+
+            var id = $"{Context.Message.Author.Id}";
+            var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+            if (content.Contains($"{Context.Message.Author.Id}"))
+            {
+                var timer = System.DateTime.Parse(parse.Groups[2].Value).AddHours(Info.Hub.Config.Trade.EggRaffleCooldown);
+                var timeremaining = timer - System.DateTime.Now;
+                if (System.DateTime.Now >= timer)
+                {
+                    content = content.Replace(parse.Groups[0].Value, $"{id} - {System.DateTime.Now}").TrimEnd();
+                    System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRngBlacklist.txt");
+                    writer.WriteLine(content);
+                    writer.Close();
+                }
+                else
+                {
+                    await ReplyAsync($"{Context.User.Mention}, please try again in {timeremaining.Hours:N0}h : {timeremaining.Minutes:N0}m : {timeremaining.Seconds:N0}s!").ConfigureAwait(false);
+                    return;
+                }
+            }
+            else System.IO.File.AppendAllText("EggRngBlacklist.txt", $"{Context.Message.Author.Id} - {System.DateTime.Now}{System.Environment.NewLine}");
+
+            var code = Info.GetRandomTradeCode();
+            int[] validEgg = { 1, 4, 7, 10, 27, 37, 43, 50, 52, 54, 58, 60, 63, 66, 72,
+                               77, 79, 81, 83, 90, 92, 95, 98, 102, 104, 108, 109, 111, 114, 115,
+                               116, 118, 120, 122, 123, 127, 128, 129, 131, 133, 137, 163, 170, 172, 173,
+                               174, 175, 177, 194, 206, 211, 213, 214, 215, 220, 222, 223, 225, 227, 236,
+                               241, 246, 263, 270, 273, 278, 280, 290, 293, 298, 302, 303, 309, 318, 320,
+                               324, 328, 337, 338, 339, 341, 343, 349, 355, 360, 361, 403, 406, 415, 420,
+                               422, 425, 427, 434, 436, 438, 439, 440, 446, 447, 449, 451, 453, 458, 459,
+                               479, 506, 509, 517, 519, 524, 527, 529, 532, 535, 538, 539, 543, 546, 548,
+                               550, 551, 554, 556, 557, 559, 561, 562, 568, 570, 572, 574, 577, 582, 587,
+                               588, 590, 592, 595, 597, 599, 605, 606, 607, 610, 613, 616, 618, 619, 621,
+                               622, 624, 626, 627, 629, 631, 632, 633, 636, 659, 661, 674, 677, 679, 682,
+                               684, 686, 688, 690, 692, 694, 701, 702, 704, 707, 708, 710, 712, 714, 722,
+                               725, 728, 736, 742, 744, 746, 747, 749, 751, 753, 755, 757, 759, 761, 764,
+                               765, 766, 767, 769, 771, 776, 777, 778, 780, 781, 782, 810, 813, 816, 819,
+                               821, 824, 827, 829, 831, 833, 835, 837, 840, 843, 845, 846, 848, 850, 852,
+                               854, 856, 859, 868, 870, 871, 872, 874, 875, 876, 877, 878, 884, 885 };
+
+            int[] regional = { 27, 37, 50, 52, 77, 79, 83, 122, 222, 263, 554, 562, 618 };
+
+            int[] shinyOdds = { 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
+                                5, 5, 5, 5, 5, 5, 5, 6, 6, 6};
+
+            int[] abilityIndex = { 0, 1, 2 };
+            int[] formIndex1 = { 0, 1 };
+            int[] formIndex2 = { 0, 1, 2 };
+
+            var rng = new System.Random();
+            int shinyRng = rng.Next(0, shinyOdds.Length);
+            int abilityRng = rng.Next(0, abilityIndex.Length);
+            var set = new ShowdownSet($"Egg({SpeciesName.GetSpeciesName(rng.Next(new Zukan8Index(Zukan8Type.None, 1).Index, GameUtil.GetMaxSpeciesID(GameVersion.SWSH)), 2)})");
+            while (!validEgg.ToList().Contains(set.Species))
+                set = new ShowdownSet($"Egg({SpeciesName.GetSpeciesName(rng.Next(new Zukan8Index(Zukan8Type.None, 1).Index, GameUtil.GetMaxSpeciesID(GameVersion.SWSH)), 2)})");
+
+            var template = AutoLegalityWrapper.GetTemplate(set);
+            var sav = AutoLegalityWrapper.GetTrainerInfo(8);
+            var pkm = (PK8)sav.GetLegal(template, out _);
+
+            if (regional.ToList().Contains(pkm.Species))
+            {
+                int formRng = rng.Next(0, formIndex1.Length);
+                int formRng2 = rng.Next(0, formIndex2.Length);
+
+                if (pkm.Species != 52)
+                    pkm.SetAltForm(formIndex1[formRng]);
+                else pkm.SetAltForm(formIndex2[formRng2]);
+
+                if (pkm.AltForm != 0)
+                {
+                    if (pkm.Species == 27)
+                        pkm.RelearnMove3 = 10;
+                    else if (pkm.Species == 37)
+                        pkm.RelearnMove4 = 39;
+                    else if (pkm.Species == 52)
+                    {
+                        pkm.RelearnMove2 = 252;
+                        pkm.RelearnMove3 = 45;
+                    }
+                    else if (pkm.Species == 83)
+                    {
+                        pkm.RelearnMove1 = 64;
+                        pkm.RelearnMove4 = 28;
+                    }
+                    else if (pkm.Species == 222)
+                        pkm.RelearnMove1 = 33;
+                    else if (pkm.Species == 263)
+                    {
+                        pkm.RelearnMove2 = 43;
+                        pkm.RelearnMove3 = 0;
+                        pkm.RelearnMove4 = 0;
+                    }
+                }
+            }
+
+            EggTrade(pkm);
+            pkm.Nature = rng.Next(0, 24);
+            pkm.StatNature = pkm.Nature;
+            pkm.SetAbilityIndex(abilityIndex[abilityRng]);
+            pkm.IVs = pkm.SetRandomIVs(3);
+            BallApplicator.ApplyBallLegalRandom(pkm);
+
+            if (shinyOdds[shinyRng] == 3)
+            {
+                CommonEdits.SetShiny(pkm, Shiny.Never);
+                pkm.SetUnshiny();
+            }
+            else if (shinyOdds[shinyRng] == 5)
+                CommonEdits.SetShiny(pkm, Shiny.AlwaysStar);
+            else CommonEdits.SetShiny(pkm, Shiny.AlwaysSquare);
+
+            var la = new LegalityAnalysis(pkm);
+            var spec = GameInfo.Strings.Species[template.Species];
+            var invalid = !(pkm is PK8) || (!la.Valid && SysCordInstance.Self.Hub.Config.Legality.VerifyLegality);
+            if (invalid)
+            {
+                var imsg = $"Oops! I scrambled your egg! Don't tell Ramsay! Here's my best attempt for that {spec}!";
+                await Context.Channel.SendPKMAsync(pkm, imsg).ConfigureAwait(false);
+                return;
+            }
+
+            pkm.ResetPartyStats();
+            var sudo = Context.User.GetIsSudo();
+            await AddTradeToQueueAsync(code, Context.User.Username, pkm, sudo).ConfigureAwait(false);
+        }
+
         private async Task AddTradeToQueueAsync(int code, string trainerName, PK8 pk8, bool sudo)
         {
             if (!pk8.CanBeTraded() || !IsItemMule(pk8))
@@ -123,6 +285,12 @@ namespace SysBot.Pokemon.Discord
                 await ReplyAsync($"{Info.Hub.Config.Trade.ItemMuleCustomMessage}").ConfigureAwait(false);
                 return;
             }
+
+            if (Info.Hub.Config.Trade.DittoTrade && pk8.Species == 132)
+                DittoTrade(pk8);
+
+            if (Info.Hub.Config.Trade.EggTrade && pk8.Nickname == "Egg")
+                EggTrade(pk8);
 
             var la = new LegalityAnalysis(pk8);
             if (!la.Valid && SysCordInstance.Self.Hub.Config.Legality.VerifyLegality)
@@ -136,16 +304,26 @@ namespace SysBot.Pokemon.Discord
 
         private bool IsItemMule(PK8 pk8)
         {
-            if (Info.Hub.Config.Trade.ItemMuleSpecies == Species.None)
+            if (Info.Hub.Config.Trade.ItemMuleSpecies == Species.None || pk8.Species == 132 && Info.Hub.Config.Trade.DittoTrade
+                || Info.Hub.Config.Trade.EggTrade && pk8.Nickname == "Egg" || Context.Message.Content.Contains($"{Info.Hub.Config.Discord.CommandPrefix}roll") || Context.Message.Content.Contains($"{Info.Hub.Config.Discord.CommandPrefix}eggroll"))
                 return true;
             return !(pk8.Species != SpeciesName.GetSpeciesID(Info.Hub.Config.Trade.ItemMuleSpecies.ToString()) || pk8.IsShiny);
         }
 
         private async Task<bool> TrollAsync(string content, IBattleTemplate set)
         {
+            var defaultMeme = "https://i.imgur.com/qaCwr09.png";
             var path = Info.Hub.Config.Trade.MemeFileNames.Split(',');
             bool web = false;
-            if (Info.Hub.Config.Trade.MemeFileNames.Contains(".com"))
+            bool memeEmpty = false;
+
+            if (path.Length < 6)
+            {
+                path = new string[] { defaultMeme, defaultMeme, defaultMeme, defaultMeme, defaultMeme, defaultMeme };
+                memeEmpty = true;
+            }
+
+            if (Info.Hub.Config.Trade.MemeFileNames.Contains(".com") || memeEmpty)
                 web = true;
 
             if (set.HeldItem == 16)
@@ -176,14 +354,113 @@ namespace SysBot.Pokemon.Discord
                 else await Context.Channel.SendFileAsync(path[3]).ConfigureAwait(false);
                 return true;
             }
-            else if (Info.Hub.Config.Trade.ItemMuleSpecies != Species.None && set.Species != SpeciesName.GetSpeciesID(Info.Hub.Config.Trade.ItemMuleSpecies.ToString()))
+            else if (set.Nickname == "Egg" && set.Species >= 888 && set.Species <= 893)
             {
                 if (web)
                     await Context.Channel.SendMessageAsync($"{path[4]}").ConfigureAwait(false);
                 else await Context.Channel.SendFileAsync(path[4]).ConfigureAwait(false);
                 return true;
             }
+            else if (Info.Hub.Config.Trade.ItemMuleSpecies != Species.None && set.Species != SpeciesName.GetSpeciesID(Info.Hub.Config.Trade.ItemMuleSpecies.ToString()))
+            {
+                if (Info.Hub.Config.Trade.DittoTrade && set.Species == 132 || Info.Hub.Config.Trade.EggTrade && set.Nickname == "Egg")
+                    return false;
+
+                if (web)
+                    await Context.Channel.SendMessageAsync($"{path[5]}").ConfigureAwait(false);
+                else await Context.Channel.SendFileAsync(path[5]).ConfigureAwait(false);
+                return true;
+            }
             return false;
+        }
+
+        public static void DittoTrade(PKM pk8)
+        {
+            var dittoLang = new string[] { "JPN", "ENG", "FRE", "ITA", "GER", "ESP", "KOR", "CHS", "CHT" };
+            var dittoStats = new string[] { "ATK", "SPE" };
+
+            if (!(pk8.Nickname.Contains(dittoLang[0]) || pk8.Nickname.Contains(dittoLang[1]) || pk8.Nickname.Contains(dittoLang[2]) || pk8.Nickname.Contains(dittoLang[3]) || pk8.Nickname.Contains(dittoLang[4])
+                || pk8.Nickname.Contains(dittoLang[5]) || pk8.Nickname.Contains(dittoLang[6]) || pk8.Nickname.Contains(dittoLang[7]) || pk8.Nickname.Contains(dittoLang[8])))
+            {
+                pk8.Nickname = "KOR";
+                pk8.IsNicknamed = true;
+            }
+
+            if (pk8.Nickname.Contains(dittoLang[0]))
+                pk8.Language = (int)LanguageID.Japanese;
+            else if (pk8.Nickname.Contains(dittoLang[1]))
+                pk8.Language = (int)LanguageID.English;
+            else if (pk8.Nickname.Contains(dittoLang[2]))
+                pk8.Language = (int)LanguageID.French;
+            else if (pk8.Nickname.Contains(dittoLang[3]))
+                pk8.Language = (int)LanguageID.Italian;
+            else if (pk8.Nickname.Contains(dittoLang[4]))
+                pk8.Language = (int)LanguageID.German;
+            else if (pk8.Nickname.Contains(dittoLang[5]))
+                pk8.Language = (int)LanguageID.Spanish;
+            else if (pk8.Nickname.Contains(dittoLang[6]))
+                pk8.Language = (int)LanguageID.Korean;
+            else if (pk8.Nickname.Contains(dittoLang[7]))
+                pk8.Language = (int)LanguageID.ChineseS;
+            else if (pk8.Nickname.Contains(dittoLang[8]))
+                pk8.Language = (int)LanguageID.ChineseT;
+
+            if (!(pk8.Nickname.Contains(dittoStats[0]) || pk8.Nickname.Contains(dittoStats[1])))
+                pk8.IVs = new int[] { 31, 31, 31, 31, 31, 31 };
+            else if (pk8.Nickname.Contains(dittoStats[0]))
+                pk8.IVs = new int[] { 31, 0, 31, 31, 31, 31 };
+            else if (pk8.Nickname.Contains(dittoStats[1]))
+                pk8.IVs = new int[] { 31, 31, 31, 0, 31, 31 };
+
+            pk8.StatNature = pk8.Nature;
+            pk8.SetAbility(7);
+            pk8.SetAbilityIndex(1);
+            pk8.Met_Level = 60;
+            pk8.Move1 = 144;
+            pk8.Move1_PP = 0;
+            pk8.Met_Location = 154;
+            pk8.Ball = 21;
+            pk8.SetSuggestedHyperTrainingData();
+
+            if (pk8.Nickname.Contains(dittoStats[0]) && pk8.Nickname.Contains(dittoStats[1]))
+                pk8.IVs = new int[] { 31, 0, 31, 0, 31, 31 };
+        }
+
+        public static void EggTrade(PK8 pk8)
+        {
+            pk8.IsEgg = true;
+            pk8.Egg_Location = 60002;
+            pk8.HeldItem = 0;
+            pk8.CurrentLevel = 1;
+            pk8.EXP = 0;
+            pk8.DynamaxLevel = 0;
+            pk8.Met_Level = 1;
+            pk8.Met_Location = 0;
+            pk8.CurrentHandler = 0;
+            pk8.OT_Friendship = 1;
+            pk8.HT_Name = "";
+            pk8.HT_Friendship = 0;
+            pk8.HT_Language = 0;
+            pk8.HT_Gender = 0;
+            pk8.HT_Memory = 0;
+            pk8.HT_Feeling = 0;
+            pk8.HT_Intensity = 0;
+            pk8.EVs = new int[] { 0, 0, 0, 0, 0, 0 };
+            pk8.Markings = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            pk8.ClearRecordFlags();
+            pk8.GetSuggestedRelearnMoves();
+            pk8.Moves = pk8.RelearnMoves;
+            pk8.Move1_PPUps = pk8.Move2_PPUps = pk8.Move3_PPUps = pk8.Move4_PPUps = 0;
+            pk8.SetMaximumPPCurrent(pk8.Moves);
+            pk8.SetSuggestedHyperTrainingData();
+        }
+
+        public static string SpecifyOT(string content, out string specifyOT)
+        {
+            if (!content.Contains("OT: "))
+                return specifyOT = string.Empty;
+
+            return specifyOT = System.Text.RegularExpressions.Regex.Match(content, @"OT: +(\w*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
         }
     }
 }

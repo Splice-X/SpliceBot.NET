@@ -38,15 +38,41 @@ namespace SysBot.Pokemon.Discord
 
         public void TradeCanceled(PokeRoutineExecutor routine, PokeTradeDetail<T> info, PokeTradeResult msg)
         {
-            OnFinish?.Invoke(routine);
-            Context.User.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
+            if (Hub.Config.Trade.EggRaffle && info.TradeData.IsEgg)
+            {
+                System.IO.StreamReader reader = new System.IO.StreamReader("EggRngBlacklist.txt");
+                var content = reader.ReadToEnd();
+                reader.Close();
+
+                var id = System.Text.RegularExpressions.Regex.Match(Context.User.Mention, @"\D*(\d*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
+                var parse = System.Text.RegularExpressions.Regex.Match(content, id + @" - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+                if (content.Contains(id))
+                {
+                    content = content.Replace(parse.Groups[1].Value, "1/11/2000 12:00:00 AM").TrimEnd();
+                    System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRngBlacklist.txt");
+                    writer.WriteLine(content);
+                    writer.Close();
+                    OnFinish?.Invoke(routine);
+                    Context.User.SendMessageAsync($"Trade canceled: {msg}. EggRaffle cooldown was reset.").ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                OnFinish?.Invoke(routine);
+                Context.User.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
+            }
         }
 
         public void TradeFinished(PokeRoutineExecutor routine, PokeTradeDetail<T> info, T result)
         {
             OnFinish?.Invoke(routine);
             var tradedToUser = Data.Species;
-            var message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
+            string message;
+
+            if (Data.IsEgg)
+                message = tradedToUser != 0 ? $"Trade finished. Enjoy your Mysterious egg!" : "Trade finished!";
+            else message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
+
             Context.User.SendMessageAsync(message).ConfigureAwait(false);
             if (result.Species != 0 && Hub.Config.Discord.ReturnPK8s)
                 Context.User.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
@@ -88,8 +114,15 @@ namespace SysBot.Pokemon.Discord
                 x.Value = lines;
                 x.IsInline = false;
             });
-            var msg = $"Here are the details for `{r.Seed:X16}`:";
-            Context.User.SendMessageAsync(msg, embed: embed.Build()).ConfigureAwait(false);
+            var msg = $"Here's your seed details for `{r.Seed:X16}`:";
+            if (Hub.Config.SeedCheck.PostResultToChannel && !Hub.Config.SeedCheck.PostResultToBoth)
+                Context.Channel.SendMessageAsync(Context.User.Mention + " - " + msg, embed: embed.Build()).ConfigureAwait(false);
+            else if (Hub.Config.SeedCheck.PostResultToBoth)
+            {
+                Context.Channel.SendMessageAsync(Context.User.Username + " - " + msg, embed: embed.Build()).ConfigureAwait(false);
+                Context.User.SendMessageAsync(msg, embed: embed.Build()).ConfigureAwait(false);
+            }
+            else Context.User.SendMessageAsync(msg, embed: embed.Build()).ConfigureAwait(false);
         }
     }
 }
