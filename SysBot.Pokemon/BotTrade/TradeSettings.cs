@@ -31,14 +31,26 @@ namespace SysBot.Pokemon
         [Category(TradeCode), Description("Custom message to display if a non-ItemMule species is requested via $trade.")]
         public string ItemMuleCustomMessage { get; set; } = string.Empty;
 
-        [Category(TradeCode), Description("Silly, useless feature to post a meme if someone requests an illegal item for ItemMule.")]
+        [Category(TradeCode), Description("Toggle Ditto trades for breeding. Can be used with \"ItemMule\".")]
+        public bool DittoTrade { get; set; } = false;
+
+        [Category(TradeCode), Description("Toggle Egg trades. Can be used with \"ItemMule\".")]
+        public bool EggTrade { get; set; } = false;
+
+        [Category(TradeCode), Description("Silly, useless feature to post a meme if someone requests an illegal item for \"ItemMule\".")]
         public bool Memes { get; set; } = false;
 
-        [Category(TradeCode), Description("Enter either meme website links or file names with extensions. Five memes (in order; Cherish Ball, Park Ball, Dynamax Crystals, Shiny, off-species). I.e. file1.png,file2.jpg, etc.")]
+        [Category(TradeCode), Description("Enter either meme website links or file names with extensions. Six memes (in order; Cherish Ball, Park Ball, Dynamax Crystals, Shiny, Legendary Eggs, off-species). I.e. file1.png,file2.jpg, etc.")]
         public string MemeFileNames { get; set; } = string.Empty;
 
-        [Category(TradeCode), Description("Clear Nickname and fix OT if shown Pokémon's Nickname or OT is an ad (CloneBot).")]
-        public bool FixAdOTs { get; set; } = false;
+        [Category(TradeCode), Description("Enable randomly generated egg trades via $roll. Silliest feature to date.")]
+        public bool EggRaffle { get; set; } = false;
+
+        [Category(TradeCode), Description("Enter Channel ID(s) where $roll should be active (if used for raffle chats and discussions), or leave blank to work everywhere.")]
+        public string EggRaffleChannels { get; set; } = string.Empty;
+
+        [Category(TradeCode), Description("Enter the amount of time in hours until a user can requeue.")]
+        public double EggRaffleCooldown { get; set; } = 3;
 
         /// <summary>
         /// Gets a random trade code based on the range settings.

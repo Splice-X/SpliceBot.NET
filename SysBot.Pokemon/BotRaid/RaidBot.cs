@@ -114,7 +114,7 @@ namespace SysBot.Pokemon
             }
 
             if (addFriends && !string.IsNullOrEmpty(Settings.FriendCode))
-                EchoUtil.Echo($"```fix\nSend a friend request to Friend Code **{Settings.FriendCode}** to join in! Friends will be added after this raid.```");
+                EchoUtil.Echo($"Send a friend request to Friend Code **{Settings.FriendCode}** to join in! Friends will be added after this raid.");
 
             // Invite others, confirm Pokémon and wait
             await Click(A, 7_000 + Hub.Config.Timings.ExtraTimeOpenRaid, token).ConfigureAwait(false);
@@ -124,10 +124,10 @@ namespace SysBot.Pokemon
             var linkcodemsg = code < 0 ? "no Link Code" : $"code **{code:0000 0000}**";
 
             string raiddescmsg = string.IsNullOrEmpty(Hub.Config.Raid.RaidDescription) ? ((Species)raidBossSpecies).ToString() : Hub.Config.Raid.RaidDescription;
-            RaidLog(sav, linkcodemsg, raiddescmsg);
+            RaidLog(linkcodemsg, raiddescmsg);
 
             if (Hub.Config.Raid.EchoRaidNotifications)
-                EchoUtil.Echo($"```fix\nRaid lobby for {raiddescmsg} is open with {linkcodemsg}.```");
+                EchoUtil.Echo($"Raid lobby for {raiddescmsg} is open with {linkcodemsg}.");
 
             var timetowait = Hub.Config.Raid.MinTimeToWait * 1_000;
             var timetojoinraid = 175_000 - timetowait;
@@ -142,7 +142,7 @@ namespace SysBot.Pokemon
 
             await Task.Delay(1_000, token).ConfigureAwait(false);
             if (Hub.Config.Raid.EchoRaidNotifications)
-                EchoUtil.Echo($"```fix\nRaid is starting now with {linkcodemsg}.```");
+                EchoUtil.Echo($"Raid is starting now with {linkcodemsg}.");
 
             /* Press A and check if we entered a raid.  If other users don't lock in,
                it will automatically start once the timer runs out. If we don't make it into
@@ -363,7 +363,7 @@ namespace SysBot.Pokemon
 
                     var data = await Connection.ReadBytesAsync(RaidBossOffset, 2, token).ConfigureAwait(false);
                     raidBossSpecies = BitConverter.ToUInt16(data, 0);
-                    EchoUtil.Echo($"```fix\nRolling complete. Raid for {(Species)raidBossSpecies} will be going up shortly!```");
+                    EchoUtil.Echo($"Rolling complete. Raid for {(Species)raidBossSpecies} will be going up shortly!");
 
                     for (int i = 0; i < 2; i++)
                         await Click(B, 0_500, token).ConfigureAwait(false);
@@ -425,12 +425,12 @@ namespace SysBot.Pokemon
             Log("System date reset complete.");
         }
 
-        private void RaidLog(SAV8SWSH sav, string linkcodemsg, string raiddescmsg)
+        private void RaidLog(string linkcodemsg, string raiddescmsg)
         {
             if (Hub.Config.Raid.RaidLog)
             {
                 RaidLogCount++;
-                System.IO.File.WriteAllText("RaidCode.txt", $"{raiddescmsg} raid #{RaidLogCount}\n{Hub.Config.Raid.FriendCode}\nHosting raid as: {sav.OT}\nRaid is open with {linkcodemsg}\n------------------------");
+                System.IO.File.WriteAllText("RaidCode.txt", $"{raiddescmsg} raid #{RaidLogCount}\n{Hub.Config.Raid.FriendCode}\nHosting raid as: {Connection.Name.Split('-')[0]}\nRaid is open with {linkcodemsg}\n------------------------");
             }
         }
     }

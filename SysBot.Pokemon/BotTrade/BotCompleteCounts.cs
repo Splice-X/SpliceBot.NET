@@ -205,7 +205,7 @@ namespace SysBot.Pokemon
                 }
                 else if (name.Contains(shiny))
                 {
-                    if (name.Contains(newname) && name == "Sinistea")
+                    if (name.Contains(newname) && name.Contains("Sinistea"))
                         content = System.Text.RegularExpressions.Regex.Replace(content, fullPattern, $"{speciesname}{speciescount + 1}...{antiquecount}...{shinycount + 1}*", System.Text.RegularExpressions.RegexOptions.Multiline).TrimEnd();
                     if (name.Contains(newname) && name.Contains(sinistea))
                         System.IO.File.AppendAllText(file, "ANTIQUE JACKPOT!\n");
