@@ -26,12 +26,8 @@ namespace SysBot.Pokemon.Discord
             if (SysCordInstance.Self.Hub.Config.Trade.DittoTrade && set.Species == 132)
                 TradeModule.DittoTrade(pkm);
 
-            if (OT != string.Empty)
-            {
-                pkm.OT_Name = OT;
-                OT = string.Empty;
-            }
-
+            pkm.OT_Name = !OT.Equals(string.Empty) && !pkm.FatefulEncounter ? OT : pkm.OT_Name;
+            OT = string.Empty;
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];
 
@@ -52,9 +48,6 @@ namespace SysBot.Pokemon.Discord
         public static async Task ReplyWithLegalizedSetAsync(this ISocketMessageChannel channel, string content)
         {
             content = ReusableActions.StripCodeBlock(content);
-            TradeModule.SpecifyOT(content, out string specifyOT);
-            if (specifyOT != string.Empty)
-                OT = specifyOT;
             var set = new ShowdownSet(content);
             var sav = AutoLegalityWrapper.GetTrainerInfo(set.Format);
             await channel.ReplyWithLegalizedSetAsync(sav, set).ConfigureAwait(false);
