@@ -19,6 +19,9 @@ namespace SysBot.Pokemon.Discord
         [Priority(1)]
         public async Task ConvertShowdown([Summary("Generation/Format")] int gen, [Remainder][Summary("Showdown Set")] string content)
         {
+            TradeModule.SpecifyOT(content, out string specifyOT);
+            if (specifyOT != string.Empty)
+                AutoLegalityExtensionsDiscord.OT = specifyOT;
             await Context.Channel.ReplyWithLegalizedSetAsync(content, gen).ConfigureAwait(false);
         }
 
@@ -27,6 +30,9 @@ namespace SysBot.Pokemon.Discord
         [Priority(0)]
         public async Task ConvertShowdown([Remainder][Summary("Showdown Set")] string content)
         {
+            TradeModule.SpecifyOT(content, out string specifyOT);
+            if (specifyOT != string.Empty)
+                AutoLegalityExtensionsDiscord.OT = specifyOT;
             await Context.Channel.ReplyWithLegalizedSetAsync(content).ConfigureAwait(false);
         }
     }
