@@ -25,6 +25,8 @@ namespace SysBot.Pokemon
         }
 
         private int encounterCount;
+        private int catchCount;
+        private byte[] pouchData = { 0 };
 
         protected override async Task MainLoop(CancellationToken token)
         {
@@ -53,8 +55,25 @@ namespace SysBot.Pokemon
 
         private async Task WalkInLine(CancellationToken token)
         {
+            if (hub.Config.Encounter.CatchEncounter && !hub.Config.Encounter.StrongSpawn)
+            {
+                Log("Checking Poké Ball count...");
+                pouchData = await Connection.ReadBytesAsync(PokeBallOffset, 116, token).ConfigureAwait(false);
+                var counts = EncounterCount.GetBallCounts(pouchData);
+                catchCount = counts.PossibleCatches(Ball.Master);
+
+                if (catchCount == 0)
+                {
+                    Log("Insufficient Master Balls. Please obtain at least one before starting.");
+                    return;
+                }
+            }
+
             while (!token.IsCancellationRequested)
             {
+                if (hub.Config.Encounter.StrongSpawn)
+                    await StrongSpawn(token).ConfigureAwait(false);
+
                 var attempts = await StepUntilEncounter(token).ConfigureAwait(false);
                 if (attempts < 0) // aborted
                     continue;
@@ -83,7 +102,7 @@ namespace SysBot.Pokemon
                     return;
 
                 Log("Running away...");
-                while (await IsInBattle(token).ConfigureAwait(false))
+                while (await IsInBattle(token).ConfigureAwait(false) && !hub.Config.Encounter.StrongSpawn)
                     await FleeToOverworld(token).ConfigureAwait(false);
             }
         }
@@ -243,6 +262,74 @@ namespace SysBot.Pokemon
             await Click(A, 0_400, token).ConfigureAwait(false);
             await Click(B, 0_400, token).ConfigureAwait(false);
             await Click(B, 0_400, token).ConfigureAwait(false);
+        }
+
+        private async Task CatchWildPokemon(PK8 pk, CancellationToken token)
+        {
+            var check = await ReadPokemon(WildPokemonOffset, token).ConfigureAwait(false);
+            if (encounterCount != 0 && encounterCount % catchCount == 0)
+            {
+                Log($"Ran out of Master Balls to catch {SpeciesName.GetSpeciesName(pk.Species, 2)}.");
+                if (hub.Config.Encounter.InjectPokeBalls)
+                {
+                    Log("Restoring original pouch data.");
+                    await Connection.WriteBytesAsync(pouchData, PokeBallOffset, token).ConfigureAwait(false);
+                    await Task.Delay(500, token).ConfigureAwait(false);
+                }
+                else
+                {
+                    Log("Restart the game and the bot(s) or set \"Inject Poké Balls\" to True in the config.");
+                    return;
+                }
+            }
+
+            await Click(B, 1_000, token).ConfigureAwait(false);
+            await Click(X, 1_000, token).ConfigureAwait(false);
+            await Click(A, 3_000, token).ConfigureAwait(false); //Throw ball
+
+            await Click(B, 1_000, token).ConfigureAwait(false);
+            await Click(B, 1_000, token).ConfigureAwait(false); //Just in case we didn't
+
+            await Click(X, 1_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false); //Attempt again to be sure
+            while (!await IsOnOverworld(hub.Config, token).ConfigureAwait(false) && check.Species != 0)
+            {
+                await Click(B, 0_400, token).ConfigureAwait(false);
+            }
+
+            if (await IsOnOverworld(hub.Config, token).ConfigureAwait(false) && !await IsInBattle(token).ConfigureAwait(false))
+                Log($"{Ping}Caught {SpeciesName.GetSpeciesName(pk.Species, 2)} in a Master Ball! Resuming routine...");
+        }
+
+        private async Task StrongSpawn(CancellationToken token)
+        {
+            Log("Closing the game!");
+            await Click(HOME, 1_500, token).ConfigureAwait(false);
+            await Click(X, 1_000, token).ConfigureAwait(false);
+            await Click(A, 4_000, token).ConfigureAwait(false); // Closing software prompt
+            Log("Closed out of the game!");
+
+            // Open game and select profile.
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            // If they have DLC on the system and can't use it, requires an UP + A to start the game.
+            // Should be harmless otherwise since they'll be in loading screen.
+            await Click(DUP, 0_600, token).ConfigureAwait(false);
+            await Click(A, 0_600, token).ConfigureAwait(false);
+
+            // Switch Logo lag, skip cutscene, game load screen
+            await Task.Delay(11_000, token).ConfigureAwait(false);
+
+            for (int i = 0; i < 5; i++)
+                await Click(A, 1_000, token).ConfigureAwait(false);
+
+            while (!await IsOnOverworld(hub.Config, token).ConfigureAwait(false))
+                await Click(A, 1_000, token).ConfigureAwait(false);
+
+            Log("Restarted the game!");
+
+            while (!await IsInBattle(token).ConfigureAwait(false))
+                await Task.Delay(2_000, token).ConfigureAwait(false);
         }
     }
 }
