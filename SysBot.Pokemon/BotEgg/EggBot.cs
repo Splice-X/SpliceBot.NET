@@ -14,6 +14,7 @@ namespace SysBot.Pokemon
         private readonly IDumper DumpSetting;
         private readonly int[] DesiredIVs;
         private const SwordShieldDaycare Location = SwordShieldDaycare.Route5;
+        private readonly string Ping;
 
         public EggBot(PokeBotConfig cfg, PokeTradeHub<PK8> hub) : base(cfg)
         {
@@ -21,6 +22,7 @@ namespace SysBot.Pokemon
             Counts = Hub.Counts;
             DumpSetting = Hub.Config.Folder;
             DesiredIVs = StopConditionSettings.InitializeTargetIVs(Hub);
+            Ping = !Hub.Config.StopConditions.PingOnMatch.Equals(string.Empty) ? $"<@{Hub.Config.StopConditions.PingOnMatch}>\n" : "";
         }
 
         private int encounterCount;
@@ -87,10 +89,10 @@ namespace SysBot.Pokemon
                 {
                     if (Hub.Config.Egg.ContinueAfterMatch)
                     {
-                        Log("Result found! Continuing to collect more eggs.");
+                        Log($"{Ping}Result found! Continuing to collect more eggs.");
                         continue;
                     }
-                    Log("Result found! Stopping routine execution; restart the bot(s) to search again.");
+                    Log($"{Ping}Result found! Stopping routine execution; restart the bot(s) to search again.");
                     await DetachController(token).ConfigureAwait(false);
                     return;
                 }
