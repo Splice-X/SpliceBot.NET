@@ -9,5 +9,8 @@ namespace SysBot.Pokemon
 
         [Category(Encounter), Description("The method by which the bot will encounter Pokémon.")]
         public EncounterMode EncounteringType { get; set; } = EncounterMode.VerticalLine;
+
+        [Category(Encounter), Description("Toggle Strong Spawn bot. Needs prior set up (encounter Strong Spawn, run, change date forward to the weather you want, save on its spawn location).")]
+        public bool StrongSpawn { get; set; } = false;
     }
 }
