@@ -63,15 +63,10 @@ namespace SysBot.Pokemon.Discord
             content = ReusableActions.StripCodeBlock(content);
             SpecifyOT(content, out string specifyOT);
             if (specifyOT != string.Empty)
-                content = System.Text.RegularExpressions.Regex.Replace(content, @"OT: +(\w*)", "", System.Text.RegularExpressions.RegexOptions.Multiline);
+                content = System.Text.RegularExpressions.Regex.Replace(content, @"OT:(\S*\s?\S*\s?\S*)?$\W?", "", System.Text.RegularExpressions.RegexOptions.Multiline);
 
             var set = new ShowdownSet(content);
             var template = AutoLegalityWrapper.GetTemplate(set);
-            if (Info.Hub.Config.Trade.Memes)
-            {
-                if (await TrollAsync(content, template).ConfigureAwait(false))
-                    return;
-            }
 
             if (set.InvalidLines.Count != 0)
             {
@@ -81,7 +76,6 @@ namespace SysBot.Pokemon.Discord
             }
 
             var sav = AutoLegalityWrapper.GetTrainerInfo(gen);
-
             var pkm = sav.GetLegal(template, out _);
             if (specifyOT != string.Empty)
                 pkm.OT_Name = specifyOT;
@@ -89,11 +83,16 @@ namespace SysBot.Pokemon.Discord
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];
             var invalid = !(pkm is PK8) || (!la.Valid && SysCordInstance.Self.Hub.Config.Legality.VerifyLegality);
-            if (invalid)
+            if (invalid && !Info.Hub.Config.Trade.Memes)
             {
                 var imsg = $"Oops! I wasn't able to create something from that. Here's my best attempt for that {spec}!";
                 await Context.Channel.SendPKMAsync(pkm, imsg).ConfigureAwait(false);
                 return;
+            }
+            else if (Info.Hub.Config.Trade.Memes)
+            {
+                if (await TrollAsync(invalid, template).ConfigureAwait(false))
+                    return;
             }
 
             pkm.ResetPartyStats();
@@ -310,65 +309,21 @@ namespace SysBot.Pokemon.Discord
             return !(pk8.Species != SpeciesName.GetSpeciesID(Info.Hub.Config.Trade.ItemMuleSpecies.ToString()) || pk8.IsShiny);
         }
 
-        private async Task<bool> TrollAsync(string content, IBattleTemplate set)
+        private async Task<bool> TrollAsync(bool invalid, IBattleTemplate set)
         {
-            var defaultMeme = "https://i.imgur.com/qaCwr09.png";
+            var rng = new System.Random();
             var path = Info.Hub.Config.Trade.MemeFileNames.Split(',');
-            bool web = false;
-            bool memeEmpty = false;
+            var msg = $"Oops! I wasn't able to create that {GameInfo.Strings.Species[set.Species]}. Here's a meme instead!\n";
 
-            if (path.Length < 6)
-            {
-                path = new string[] { defaultMeme, defaultMeme, defaultMeme, defaultMeme, defaultMeme, defaultMeme };
-                memeEmpty = true;
-            }
+            if (path.Length == 0)
+                path = new string[] { "https://i.imgur.com/qaCwr09.png" }; //If memes enabled but none provided, use a default one.
 
-            if (Info.Hub.Config.Trade.MemeFileNames.Contains(".com") || memeEmpty)
-                web = true;
-
-            if (set.HeldItem == 16)
+            if (invalid || !ItemRestrictions.IsHeldItemAllowed(set.HeldItem, 8) || (Info.Hub.Config.Trade.ItemMuleSpecies != Species.None && set.Shiny) || Info.Hub.Config.Trade.EggTrade && set.Nickname == "Egg" && set.Species >= 888
+                || (Info.Hub.Config.Trade.ItemMuleSpecies != Species.None && GameInfo.Strings.Species[set.Species] != Info.Hub.Config.Trade.ItemMuleSpecies.ToString() && !(Info.Hub.Config.Trade.DittoTrade && set.Species == 132 || Info.Hub.Config.Trade.EggTrade && set.Nickname == "Egg" && set.Species < 888)))
             {
-                if (web)
-                    await Context.Channel.SendMessageAsync($"{path[0]}").ConfigureAwait(false);
-                else await Context.Channel.SendFileAsync(path[0]).ConfigureAwait(false);
-                return true;
-            }
-            else if (set.HeldItem == 500)
-            {
-                if (web)
-                    await Context.Channel.SendMessageAsync($"{path[1]}").ConfigureAwait(false);
-                else await Context.Channel.SendFileAsync(path[1]).ConfigureAwait(false);
-                return true;
-            }
-            else if (content.Contains($"★"))
-            {
-                if (web)
-                    await Context.Channel.SendMessageAsync($"{path[2]}").ConfigureAwait(false);
-                else await Context.Channel.SendFileAsync(path[2]).ConfigureAwait(false);
-                return true;
-            }
-            else if (Info.Hub.Config.Trade.ItemMuleSpecies != Species.None && set.Shiny)
-            {
-                if (web)
-                    await Context.Channel.SendMessageAsync($"{path[3]}").ConfigureAwait(false);
-                else await Context.Channel.SendFileAsync(path[3]).ConfigureAwait(false);
-                return true;
-            }
-            else if (set.Nickname == "Egg" && set.Species >= 888 && set.Species <= 893)
-            {
-                if (web)
-                    await Context.Channel.SendMessageAsync($"{path[4]}").ConfigureAwait(false);
-                else await Context.Channel.SendFileAsync(path[4]).ConfigureAwait(false);
-                return true;
-            }
-            else if (Info.Hub.Config.Trade.ItemMuleSpecies != Species.None && set.Species != SpeciesName.GetSpeciesID(Info.Hub.Config.Trade.ItemMuleSpecies.ToString()))
-            {
-                if (Info.Hub.Config.Trade.DittoTrade && set.Species == 132 || Info.Hub.Config.Trade.EggTrade && set.Nickname == "Egg")
-                    return false;
-
-                if (web)
-                    await Context.Channel.SendMessageAsync($"{path[5]}").ConfigureAwait(false);
-                else await Context.Channel.SendFileAsync(path[5]).ConfigureAwait(false);
+                if (Info.Hub.Config.Trade.MemeFileNames.Contains(".com") || path.Length == 0)
+                    _ = invalid == true ? await Context.Channel.SendMessageAsync($"{msg}{path[rng.Next(path.Length)]}").ConfigureAwait(false) : await Context.Channel.SendMessageAsync($"{path[rng.Next(path.Length)]}").ConfigureAwait(false);
+                else _ = invalid == true ? await Context.Channel.SendMessageAsync($"{msg}{path[rng.Next(path.Length)]}").ConfigureAwait(false) : await Context.Channel.SendMessageAsync($"{path[rng.Next(path.Length)]}").ConfigureAwait(false);
                 return true;
             }
             return false;
@@ -460,7 +415,7 @@ namespace SysBot.Pokemon.Discord
             if (!content.Contains("OT: "))
                 return specifyOT = string.Empty;
 
-            return specifyOT = System.Text.RegularExpressions.Regex.Match(content, @"OT: +(\w*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
+            return specifyOT = System.Text.RegularExpressions.Regex.Match(content, @"OT:(\S*\s?\S*\s?\S*)?$\W?", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim();
         }
     }
 }
