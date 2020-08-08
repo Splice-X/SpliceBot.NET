@@ -40,7 +40,7 @@ namespace SysBot.Pokemon
         [Category(TradeCode), Description("Silly, useless feature to post a meme if someone requests an illegal item for \"ItemMule\".")]
         public bool Memes { get; set; } = false;
 
-        [Category(TradeCode), Description("Enter either meme website links or file names with extensions. Six memes (in order; Cherish Ball, Park Ball, Dynamax Crystals, Shiny, Legendary Eggs, off-species). I.e. file1.png,file2.jpg, etc.")]
+        [Category(TradeCode), Description("Enter either direct picture or gif links, or file names with extensions. For example, file1.png, file2.jpg, etc.")]
         public string MemeFileNames { get; set; } = string.Empty;
 
         [Category(TradeCode), Description("Enable randomly generated egg trades via $roll. Silliest feature to date.")]
