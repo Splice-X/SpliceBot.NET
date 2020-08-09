@@ -59,8 +59,8 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("When set, the bot will roll species and set date to 2000, resetting it once it reaches 2060.")]
         public bool AutoRoll { get; set; } = false;
 
-        [Category(Hosting), Description("Extra time in milliseconds to enter the initial lobby for AutoRoll. First lobby can be slower than subsequent ones.")]
-        public int ExtraTimeInitialLobbyAR { get; set; } = 0;
+        [Category(Hosting), Description("Extra time in milliseconds to enter a lobby for AutoRoll.")]
+        public int ExtraTimeLoadLobbyAR { get; set; } = 0;
 
         [Category(Hosting), Description("Extra time in milliseconds to wait after \"Invite Others\" before clicking HOME.")]
         public int ExtraTimeInviteOthersAR { get; set; } = 0;
