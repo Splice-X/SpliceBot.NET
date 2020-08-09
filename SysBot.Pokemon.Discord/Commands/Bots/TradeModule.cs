@@ -331,15 +331,11 @@ namespace SysBot.Pokemon.Discord
 
         public static void DittoTrade(PKM pk8)
         {
+            if (pk8.IsNicknamed == false)
+                return;
+
             var dittoLang = new string[] { "JPN", "ENG", "FRE", "ITA", "GER", "ESP", "KOR", "CHS", "CHT" };
             var dittoStats = new string[] { "ATK", "SPE" };
-
-            if (!(pk8.Nickname.Contains(dittoLang[0]) || pk8.Nickname.Contains(dittoLang[1]) || pk8.Nickname.Contains(dittoLang[2]) || pk8.Nickname.Contains(dittoLang[3]) || pk8.Nickname.Contains(dittoLang[4])
-                || pk8.Nickname.Contains(dittoLang[5]) || pk8.Nickname.Contains(dittoLang[6]) || pk8.Nickname.Contains(dittoLang[7]) || pk8.Nickname.Contains(dittoLang[8])))
-            {
-                pk8.Nickname = "KOR";
-                pk8.IsNicknamed = true;
-            }
 
             if (pk8.Nickname.Contains(dittoLang[0]))
                 pk8.Language = (int)LanguageID.Japanese;
