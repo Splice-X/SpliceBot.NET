@@ -347,19 +347,20 @@ namespace SysBot.Pokemon
                 if (day == 0) //Enters den and invites others on day 1
                 {
                     Log("Initializing the rolling auto-host routine.");
-                    await Click(A, 2_000 + Hub.Config.Raid.ExtraTimeInitialLobbyAR, token).ConfigureAwait(false);
-                    await Click(A, 3_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false);
+                    await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
+                    await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false);
                 }
 
                 await TimeMenu(token).ConfigureAwait(false); //Goes to system time screen
                 await TimeSkip(token).ConfigureAwait(false); //Skips a year
-                await Click(B, 1_500, token).ConfigureAwait(false);
-                await Click(A, 3_000 + Hub.Config.Raid.ExtraTimeLobbyQuitAR, token).ConfigureAwait(false); //Cancel lobby
+                await Click(B, 2_000, token).ConfigureAwait(false);
+                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLobbyQuitAR, token).ConfigureAwait(false); //Cancel lobby
 
                 if (day == 2) //We're on the fourth frame. Collect watts, exit lobby, return to main loop
                 {
-                    for (int i = 0; i < 3; i++)
-                        await Click(A, 0_750 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
+                    for (int i = 0; i < 2; i++)
+                        await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
+                    await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false); //Collect watts, invite others
 
                     var data = await Connection.ReadBytesAsync(RaidBossOffset, 2, token).ConfigureAwait(false);
                     raidBossSpecies = BitConverter.ToUInt16(data, 0);
@@ -371,15 +372,16 @@ namespace SysBot.Pokemon
                     return;
                 }
 
-                for (int i = 0; i < 3; i++)
-                    await Click(A, 0_750 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
-                await Click(A, 3_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); //Collect watts, invite others
+                for (int i = 0; i < 2; i++)
+                    await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
+                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false); //Collect watts, invite others
+                await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); //Collect watts, invite others
             }
         }
 
         private async Task TimeMenu(CancellationToken token)
         {
-            await Click(HOME, 1_500, token).ConfigureAwait(false);
+            await Click(HOME, 2_000, token).ConfigureAwait(false);
             await Click(DDOWN, 0_250, token).ConfigureAwait(false);
             await SetStick(SwitchStick.LEFT, 30000, 0, 1_000, token).ConfigureAwait(false);
             await SetStick(SwitchStick.LEFT, 0, 0, 0_250, token).ConfigureAwait(false);
@@ -387,10 +389,10 @@ namespace SysBot.Pokemon
             await Click(A, 1_000, token).ConfigureAwait(false); //Enter settings
             await SetStick(SwitchStick.LEFT, 0, -30000, 1_500, token).ConfigureAwait(false);
             await SetStick(SwitchStick.LEFT, 0, 0, 0_250, token).ConfigureAwait(false);
-            await Click(A, 0_750, token).ConfigureAwait(false); //Scroll to system settings
+            await Click(A, 1_250, token).ConfigureAwait(false); //Scroll to system settings
             for (int i = 0; i < 4; i++)
                 await Click(DDOWN, 0_250, token).ConfigureAwait(false);
-            await Click(A, 0_750, token).ConfigureAwait(false); //Scroll to date/time settings
+            await Click(A, 1_250, token).ConfigureAwait(false); //Scroll to date/time settings
             await Click(DDOWN, 0_250, token).ConfigureAwait(false);
             await Click(DDOWN, 0_250, token).ConfigureAwait(false);
             await Click(A, 0_750, token).ConfigureAwait(false); //Scroll to date/time screen
