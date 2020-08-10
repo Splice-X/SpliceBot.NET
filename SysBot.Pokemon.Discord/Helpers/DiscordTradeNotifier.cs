@@ -45,10 +45,10 @@ namespace SysBot.Pokemon.Discord
                 reader.Close();
 
                 var id = System.Text.RegularExpressions.Regex.Match(Context.User.Mention, @"\D*(\d*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
-                var parse = System.Text.RegularExpressions.Regex.Match(content, id + @" - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+                var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
                 if (content.Contains(id))
                 {
-                    content = content.Replace(parse.Groups[1].Value, "1/11/2000 12:00:00 AM").TrimEnd();
+                    content = content.Replace(parse.Groups[0].Value, $"{id} - 1/11/2000 12:00:00 AM").TrimEnd();
                     System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRngBlacklist.txt");
                     writer.WriteLine(content);
                     writer.Close();
