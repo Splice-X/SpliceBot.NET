@@ -41,15 +41,15 @@ namespace SysBot.Pokemon.Discord
             await CloneAsync(code).ConfigureAwait(false);
         }
 
-        [Command("fixads")]
-        [Alias("fix")]
+        [Command("fixOT")]
+        [Alias("fix", "f")]
         [Summary("Fixes OT and Nickname of a Pokémon you show via Link Trade if an advert is detected.")]
-        [RequireQueueRole(nameof(DiscordManager.RolesTrade))]
+        [RequireQueueRole(nameof(DiscordManager.RolesFixOT))]
         public async Task FixAdOT()
         {
             var code = Info.GetRandomTradeCode();
             bool sudo = Context.User.GetIsSudo();
-            await Context.AddToQueueAsync(code, Context.User.Username, sudo, new PK8(), PokeRoutineType.Clone, PokeTradeType.FixAdOT).ConfigureAwait(false);
+            await Context.AddToQueueAsync(code, Context.User.Username, sudo, new PK8(), PokeRoutineType.FixOT, PokeTradeType.FixOT).ConfigureAwait(false);
         }
 
         [Command("cloneList")]
@@ -59,6 +59,23 @@ namespace SysBot.Pokemon.Discord
         public async Task GetListAsync()
         {
             string msg = Info.GetTradeList(PokeRoutineType.Clone);
+            var embed = new EmbedBuilder();
+            embed.AddField(x =>
+            {
+                x.Name = "Pending Trades";
+                x.Value = msg;
+                x.IsInline = false;
+            });
+            await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
+        }
+
+        [Command("fixOTList")]
+        [Alias("fl", "fq")]
+        [Summary("Prints the users in the FixOT queue.")]
+        [RequireSudo]
+        public async Task GetFixListAsync()
+        {
+            string msg = Info.GetTradeList(PokeRoutineType.FixOT);
             var embed = new EmbedBuilder();
             embed.AddField(x =>
             {
