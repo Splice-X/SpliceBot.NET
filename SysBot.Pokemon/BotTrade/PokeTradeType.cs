@@ -6,7 +6,7 @@
         Specific,
         Seed,
         Clone,
+        FixOT,
         Dump,
-        FixAdOT,
     }
 }
