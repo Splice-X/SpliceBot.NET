@@ -281,11 +281,11 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 5; i++)
                     await Click(A, 0_500, token).ConfigureAwait(false);
             }
-            else if (poke.Type == PokeTradeType.FixAdOT)
+            else if (poke.Type == PokeTradeType.FixOT)
             {
                 var clone = (PK8)pk.Clone();
-                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)").Value != ""
-                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)").Value != "";
+                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)").Value != ""
+                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)").Value != "";
 
                 if (adOT && clone.OT_Name != $"{TrainerName}")
                 {
@@ -416,7 +416,7 @@ namespace SysBot.Pokemon
             // Trade was Successful!
             var traded = await ReadBoxPokemon(InjectBox, InjectSlot, token).ConfigureAwait(false);
             // Pokémon in b1s1 is same as the one they were supposed to receive (was never sent).
-            if (poke.Type != PokeTradeType.FixAdOT && SearchUtil.HashByDetails(traded) == SearchUtil.HashByDetails(pkm))
+            if (poke.Type != PokeTradeType.FixOT && SearchUtil.HashByDetails(traded) == SearchUtil.HashByDetails(pkm))
             {
                 Log("User did not complete the trade.");
                 return PokeTradeResult.TrainerTooSlow;
@@ -433,6 +433,8 @@ namespace SysBot.Pokemon
                     counts.AddCompletedDistribution();
                 else if (poke.Type == PokeTradeType.Clone)
                     counts.AddCompletedClones();
+                else if (poke.Type == PokeTradeType.FixOT)
+                    counts.AddCompletedFixOTs();
                 else
                     Hub.Counts.AddCompletedTrade();
 
@@ -440,7 +442,7 @@ namespace SysBot.Pokemon
                 {
                     var subfolder = poke.Type.ToString().ToLower();
                     DumpPokemon(DumpSetting.DumpFolder, subfolder, traded); // received
-                    if (poke.Type == PokeTradeType.Specific || poke.Type == PokeTradeType.Clone)
+                    if (poke.Type == PokeTradeType.Specific || poke.Type == PokeTradeType.Clone || poke.Type == PokeTradeType.FixOT)
                         DumpPokemon(DumpSetting.DumpFolder, "traded", pkm); // sent to partner
                 }
             }
