@@ -17,6 +17,7 @@ namespace SysBot.Pokemon.Discord
 
         public readonly SensitiveSet<string> RolesClone = new SensitiveSet<string>();
         public readonly SensitiveSet<string> RolesFixOT = new SensitiveSet<string>();
+        public readonly SensitiveSet<string> RolesEggRoll = new SensitiveSet<string>();
         public readonly SensitiveSet<string> RolesTrade = new SensitiveSet<string>();
         public readonly SensitiveSet<string> RolesSeed = new SensitiveSet<string>();
         public readonly SensitiveSet<string> RolesDump = new SensitiveSet<string>();
@@ -46,6 +47,7 @@ namespace SysBot.Pokemon.Discord
             {
                 nameof(RolesClone) => RolesClone,
                 nameof(RolesFixOT) => RolesFixOT,
+                nameof(RolesEggRoll) => RolesEggRoll,
                 nameof(RolesTrade) => RolesTrade,
                 nameof(RolesSeed) => RolesSeed,
                 nameof(RolesDump) => RolesDump,
@@ -65,6 +67,7 @@ namespace SysBot.Pokemon.Discord
 
             RolesClone.Read(cfg.Discord.RoleCanClone, z => z);
             RolesFixOT.Read(cfg.Discord.RoleCanFixOT, z => z);
+            RolesEggRoll.Read(cfg.Discord.RoleCanEggRoll, z => z);
             RolesTrade.Read(cfg.Discord.RoleCanTrade, z => z);
             RolesSeed.Read(cfg.Discord.RoleCanSeedCheck, z => z);
             RolesDump.Read(cfg.Discord.RoleCanDump, z => z);
@@ -80,6 +83,7 @@ namespace SysBot.Pokemon.Discord
 
             Config.Discord.RoleCanClone = RolesClone.Write();
             Config.Discord.RoleCanFixOT = RolesFixOT.Write();
+            Config.Discord.RoleCanEggRoll = RolesEggRoll.Write();
             Config.Discord.RoleCanTrade = RolesTrade.Write();
             Config.Discord.RoleCanSeedCheck = RolesSeed.Write();
             Config.Discord.RoleCanDump = RolesDump.Write();

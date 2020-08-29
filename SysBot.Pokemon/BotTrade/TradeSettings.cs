@@ -43,14 +43,11 @@ namespace SysBot.Pokemon
         [Category(TradeCode), Description("Enter either direct picture or gif links, or file names with extensions. For example, file1.png, file2.jpg, etc.")]
         public string MemeFileNames { get; set; } = string.Empty;
 
-        [Category(TradeCode), Description("Enable randomly generated egg trades via $roll. Silliest feature to date.")]
-        public bool EggRaffle { get; set; } = false;
-
-        [Category(TradeCode), Description("Enter Channel ID(s) where $roll should be active (if used for raffle chats and discussions), or leave blank to work everywhere.")]
-        public string EggRaffleChannels { get; set; } = string.Empty;
+        [Category(TradeCode), Description("Enter Channel ID(s) where $roll should be active, or leave blank.")]
+        public string EggRollChannels { get; set; } = string.Empty;
 
         [Category(TradeCode), Description("Enter the amount of time in hours until a user can requeue.")]
-        public double EggRaffleCooldown { get; set; } = 3;
+        public double EggRollCooldown { get; set; } = 0.5;
 
         /// <summary>
         /// Gets a random trade code based on the range settings.
