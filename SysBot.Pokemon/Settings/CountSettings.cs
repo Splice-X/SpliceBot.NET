@@ -26,6 +26,9 @@ namespace SysBot.Pokemon
         [Category(Trades), Description("Completed FixOT Trades (Specific User)")]
         public int CompletedFixOTs { get; set; }
 
+        [Category(Trades), Description("Completed EggRoll Trades (Specific User)")]
+        public int CompletedEggRolls { get; set; }
+
         [Category(Trades), Description("Completed Dump Trades (Specific User)")]
         public int CompletedDumps { get; set; }
 

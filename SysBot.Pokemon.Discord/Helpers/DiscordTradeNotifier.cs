@@ -38,29 +38,8 @@ namespace SysBot.Pokemon.Discord
 
         public void TradeCanceled(PokeRoutineExecutor routine, PokeTradeDetail<T> info, PokeTradeResult msg)
         {
-            if (Hub.Config.Trade.EggRaffle && info.TradeData.IsEgg)
-            {
-                System.IO.StreamReader reader = new System.IO.StreamReader("EggRngBlacklist.txt");
-                var content = reader.ReadToEnd();
-                reader.Close();
-
-                var id = System.Text.RegularExpressions.Regex.Match(Context.User.Mention, @"\D*(\d*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
-                var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
-                if (content.Contains(id))
-                {
-                    content = content.Replace(parse.Groups[0].Value, $"{id} - 1/11/2000 12:00:00 AM").TrimEnd();
-                    System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRngBlacklist.txt");
-                    writer.WriteLine(content);
-                    writer.Close();
-                    OnFinish?.Invoke(routine);
-                    Context.User.SendMessageAsync($"Trade canceled: {msg}. EggRaffle cooldown was reset.").ConfigureAwait(false);
-                }
-            }
-            else
-            {
-                OnFinish?.Invoke(routine);
-                Context.User.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
-            }
+            OnFinish?.Invoke(routine);
+            Context.User.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
         }
 
         public void TradeFinished(PokeRoutineExecutor routine, PokeTradeDetail<T> info, T result)
@@ -69,13 +48,31 @@ namespace SysBot.Pokemon.Discord
             var tradedToUser = Data.Species;
             string message;
 
-            if (Data.IsEgg)
+            if (Data.IsEgg && info.Type == PokeTradeType.EggRoll)
                 message = tradedToUser != 0 ? $"Trade finished. Enjoy your Mysterious egg!" : "Trade finished!";
             else message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
 
             Context.User.SendMessageAsync(message).ConfigureAwait(false);
             if (result.Species != 0 && Hub.Config.Discord.ReturnPK8s)
                 Context.User.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
+
+            if (info.Type == PokeTradeType.EggRoll && Hub.Config.Trade.EggRollCooldown > 0) // Add cooldown if trade completed
+            {
+                System.IO.StreamReader reader = new System.IO.StreamReader("EggRollCooldown.txt");
+                var content = reader.ReadToEnd();
+                reader.Close();
+
+                var id = $"{Context.User.Id}";
+                var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+                if (content.Contains(id))
+                {
+                    content = content.Replace(parse.Groups[0].Value, $"{id} - {DateTime.Now}").TrimEnd();
+                    System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRollCooldown.txt");
+                    writer.WriteLine(content);
+                    writer.Close();
+                }
+                else System.IO.File.AppendAllText("EggRollCooldown.txt", $"{id} - {DateTime.Now}{Environment.NewLine}");
+            }
         }
 
         public void SendNotification(PokeRoutineExecutor routine, PokeTradeDetail<T> info, string message)
