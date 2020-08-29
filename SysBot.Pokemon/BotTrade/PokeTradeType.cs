@@ -7,6 +7,7 @@
         Seed,
         Clone,
         FixOT,
+        EggRoll,
         Dump,
     }
 }

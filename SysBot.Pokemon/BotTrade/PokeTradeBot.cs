@@ -237,7 +237,7 @@ namespace SysBot.Pokemon
             }
 
             // Confirm Box 1 Slot 1
-            if (poke.Type == PokeTradeType.Specific)
+            if (poke.Type == PokeTradeType.Specific || poke.Type == PokeTradeType.EggRoll)
             {
                 for (int i = 0; i < 5; i++)
                     await Click(A, 0_500, token).ConfigureAwait(false);
@@ -284,8 +284,8 @@ namespace SysBot.Pokemon
             else if (poke.Type == PokeTradeType.FixOT)
             {
                 var clone = (PK8)pk.Clone();
-                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)").Value != ""
-                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)").Value != "";
+                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)").Value != ""
+                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)").Value != "";
 
                 if (adOT && clone.OT_Name != $"{TrainerName}")
                 {
@@ -295,7 +295,7 @@ namespace SysBot.Pokemon
                     clone.PKRS_Cured = false;
                     clone.PKRS_Days = 0;
                     clone.PKRS_Strain = 0;
-                    poke.SendNotification(this, $"```fix\nDetected an ad OT/Nickname with your {(Species)clone.Species}! Fixed it for you!```");
+                    poke.SendNotification(this, $"```fix\nDetected an ad OT/Nickname with your {(Species)clone.Species}!```");
                 }
                 else
                 {
@@ -323,7 +323,7 @@ namespace SysBot.Pokemon
                 if (Hub.Config.Legality.ResetHOMETracker)
                     clone.Tracker = 0;
 
-                poke.SendNotification(this, $"```fix\nFixed your {(Species)clone.Species}!\nNow confirm the trade!```");
+                poke.SendNotification(this, $"```fix\nFixed your {(Species)clone.Species}! Now confirm the trade!```");
                 Log($"Fixed Nickname/OT for {(Species)clone.Species}.");
 
                 await ReadUntilPresent(LinkTradePartnerPokemonOffset, 3_000, 1_000, token).ConfigureAwait(false);
@@ -435,6 +435,8 @@ namespace SysBot.Pokemon
                     counts.AddCompletedClones();
                 else if (poke.Type == PokeTradeType.FixOT)
                     counts.AddCompletedFixOTs();
+                else if (poke.Type == PokeTradeType.EggRoll)
+                    counts.AddCompletedEggRolls();
                 else
                     Hub.Counts.AddCompletedTrade();
 
@@ -442,7 +444,7 @@ namespace SysBot.Pokemon
                 {
                     var subfolder = poke.Type.ToString().ToLower();
                     DumpPokemon(DumpSetting.DumpFolder, subfolder, traded); // received
-                    if (poke.Type == PokeTradeType.Specific || poke.Type == PokeTradeType.Clone || poke.Type == PokeTradeType.FixOT)
+                    if (poke.Type == PokeTradeType.Specific || poke.Type == PokeTradeType.Clone || poke.Type == PokeTradeType.FixOT || poke.Type == PokeTradeType.EggRoll)
                         DumpPokemon(DumpSetting.DumpFolder, "traded", pkm); // sent to partner
                 }
             }

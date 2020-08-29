@@ -44,15 +44,15 @@ namespace SysBot.Pokemon.Discord
 
         [Command("clearcooldown")]
         [Alias("cc")]
-        [Summary("Clears EggRaffle cooldown of the mentioned user.")]
+        [Summary("Clears EggRoll cooldown of the mentioned user.")]
         [RequireSudo]
         // ReSharper disable once UnusedParameter.Global
         public async Task ClearCooldown([Remainder] string id)
         {
-            if (!System.IO.File.Exists("EggRngBlacklist.txt"))
-                System.IO.File.Create("EggRngBlacklist.txt").Close();
+            if (!System.IO.File.Exists("EggRollCooldown.txt"))
+                System.IO.File.Create("EggRollCooldown.txt").Close();
 
-            System.IO.StreamReader reader = new System.IO.StreamReader("EggRngBlacklist.txt");
+            System.IO.StreamReader reader = new System.IO.StreamReader("EggRollCooldown.txt");
             var content = reader.ReadToEnd();
             reader.Close();
 
@@ -61,7 +61,7 @@ namespace SysBot.Pokemon.Discord
             if (content.Contains(id))
             {
                 content = content.Replace(parse.Groups[0].Value, $"{id} - 1/11/2000 12:00:00 AM").TrimEnd();
-                System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRngBlacklist.txt");
+                System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRollCooldown.txt");
                 writer.WriteLine(content);
                 writer.Close();
                 await ReplyAsync("Done.").ConfigureAwait(false);
