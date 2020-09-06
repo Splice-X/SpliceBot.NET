@@ -1,7 +1,11 @@
 # SysBot.NET
 ![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)
 
-## Support Discord:
+## Support Discords:
+
+For specific support for this fork of kwsch's SysBot.NET repo feel free to join! (No support will be provided in the official PKHeX Discord, please don't bother the devs)
+
+[<a class="discord-widget"><img src="https://discordapp.com/api/guilds/695809740428673034/embed.png?style=banner2"></a>](https://discord.gg/KrPRNk9)
 
 For support on setting up your own instance of SysBot.NET, feel free to join the discord! (Beware of un-official discords who claim to be official)
 
