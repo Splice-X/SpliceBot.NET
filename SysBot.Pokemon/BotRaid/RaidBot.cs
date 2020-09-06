@@ -99,7 +99,7 @@ namespace SysBot.Pokemon
 
             if (raidBossSpecies == -1)
             {
-                var data = await Connection.ReadBytesAsync(RaidBossOffset, 2, token).ConfigureAwait(false);
+                var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(RaidBossOffset, 2, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(RaidBossOffset, 2);
                 raidBossSpecies = BitConverter.ToUInt16(data, 0);
             }
             Log($"Initializing raid for {(Species)raidBossSpecies}.");
@@ -179,7 +179,7 @@ namespace SysBot.Pokemon
             var ofs = RaidP0PokemonOffset + (0x30 * player);
 
             // Check if the player has locked in.
-            var data = await Connection.ReadBytesAsync(ofs + RaidLockedInIncr, 1, token).ConfigureAwait(false);
+            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs + RaidLockedInIncr, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs + RaidLockedInIncr, 1);
             if (data[0] == 0)
                 return false;
 
@@ -188,16 +188,16 @@ namespace SysBot.Pokemon
             // If we get to here, they're locked in and should have a Pokémon selected.
             if (Hub.Config.Raid.EchoPartyReady)
             {
-                data = await Connection.ReadBytesAsync(ofs, 2, token).ConfigureAwait(false);
+                data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs, 2, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs, 2);
                 var dexno = BitConverter.ToUInt16(data, 0);
 
-                data = await Connection.ReadBytesAsync(ofs + RaidAltFormInc, 1, token).ConfigureAwait(false);
+                data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs + RaidAltFormInc, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs + RaidAltFormInc, 1);
                 var altformstr = data[0] == 0 ? "" : "-" + data[0];
 
-                data = await Connection.ReadBytesAsync(ofs + RaidShinyIncr, 1, token).ConfigureAwait(false);
+                data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs + RaidShinyIncr, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs + RaidShinyIncr, 1);
                 var shiny = data[0] == 1 ? "★ " : "";
 
-                data = await Connection.ReadBytesAsync(ofs + RaidGenderIncr, 1, token).ConfigureAwait(false);
+                data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs + RaidGenderIncr, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs + RaidGenderIncr, 1);
                 var gender = data[0] == 0 ? " (M)" : (data[0] == 1 ? " (F)" : "");
 
                 EchoUtil.Echo($"Player {player + 1} is ready with {shiny}{(Species)dexno}{altformstr}{gender}!");
@@ -362,7 +362,7 @@ namespace SysBot.Pokemon
                         await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
                     await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false); //Collect watts, invite others
 
-                    var data = await Connection.ReadBytesAsync(RaidBossOffset, 2, token).ConfigureAwait(false);
+                    var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(RaidBossOffset, 2, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(RaidBossOffset, 2);
                     raidBossSpecies = BitConverter.ToUInt16(data, 0);
                     EchoUtil.Echo($"Rolling complete. Raid for {(Species)raidBossSpecies} will be going up shortly!");
 

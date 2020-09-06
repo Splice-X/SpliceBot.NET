@@ -160,7 +160,7 @@ namespace SysBot.Pokemon.Discord
             reader.Close();
 
             var id = $"{Context.User.Id}";
-            var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+            var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (.*$)", System.Text.RegularExpressions.RegexOptions.Multiline);
             System.DateTime.TryParse(parse.Groups[2].Value, out System.DateTime time);
             var timer = time.AddHours(Info.Hub.Config.Trade.EggRollCooldown);
             var timeRemaining = timer - System.DateTime.Now;
@@ -336,7 +336,7 @@ namespace SysBot.Pokemon.Discord
                 return;
 
             var dittoLang = new string[] { "JPN", "ENG", "FRE", "ITA", "GER", "ESP", "KOR", "CHS", "CHT" };
-            var dittoStats = new string[] { "ATK", "SPE" };
+            var dittoStats = new string[] { "ATK", "SPE", "SPA" };
 
             if (pk8.Nickname.Contains(dittoLang[0]))
                 pk8.Language = (int)LanguageID.Japanese;
@@ -357,13 +357,7 @@ namespace SysBot.Pokemon.Discord
             else if (pk8.Nickname.Contains(dittoLang[8]))
                 pk8.Language = (int)LanguageID.ChineseT;
 
-            if (!(pk8.Nickname.Contains(dittoStats[0]) || pk8.Nickname.Contains(dittoStats[1])))
-                pk8.IVs = new int[] { 31, 31, 31, 31, 31, 31 };
-            else if (pk8.Nickname.Contains(dittoStats[0]))
-                pk8.IVs = new int[] { 31, 0, 31, 31, 31, 31 };
-            else if (pk8.Nickname.Contains(dittoStats[1]))
-                pk8.IVs = new int[] { 31, 31, 31, 0, 31, 31 };
-
+            pk8.MetDate = System.DateTime.Parse("2020/10/20");
             pk8.StatNature = pk8.Nature;
             pk8.SetAbility(7);
             pk8.SetAbilityIndex(1);
@@ -372,10 +366,8 @@ namespace SysBot.Pokemon.Discord
             pk8.Move1_PP = 0;
             pk8.Met_Location = 154;
             pk8.Ball = 21;
+            pk8.IVs = new int[] { 31, pk8.Nickname.Contains(dittoStats[0]) ? 0 : 31, 31, pk8.Nickname.Contains(dittoStats[1]) ? 0 : 31, pk8.Nickname.Contains(dittoStats[2]) ? 0 : 31, 31 };
             pk8.SetSuggestedHyperTrainingData();
-
-            if (pk8.Nickname.Contains(dittoStats[0]) && pk8.Nickname.Contains(dittoStats[1]))
-                pk8.IVs = new int[] { 31, 0, 31, 0, 31, 31 };
         }
 
         public static void EggTrade(PK8 pk8)

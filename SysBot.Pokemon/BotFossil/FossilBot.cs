@@ -48,7 +48,7 @@ namespace SysBot.Pokemon
             await SetBoxPokemon(Blank, InjectBox, InjectSlot, token).ConfigureAwait(false);
 
             Log("Checking item counts...");
-            var pouchData = await Connection.ReadBytesAsync(ItemTreasureAddress, 80, token).ConfigureAwait(false);
+            var pouchData = Config.ConnectionType == Base.PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ItemTreasureAddress, 80, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ItemTreasureAddress, 80);
             var counts = FossilCount.GetFossilCounts(pouchData);
             int reviveCount = counts.PossibleRevives(Hub.Config.Fossil.Species);
             if (reviveCount == 0)
@@ -67,7 +67,9 @@ namespace SysBot.Pokemon
                     if (Hub.Config.Fossil.InjectWhenEmpty)
                     {
                         Log("Restoring original pouch data.");
-                        await Connection.WriteBytesAsync(pouchData, ItemTreasureAddress, token).ConfigureAwait(false);
+                        if (Config.ConnectionType == Base.PokeConnectionType.WiFi)
+                            await Connection.WriteBytesAsync(pouchData, ItemTreasureAddress, token).ConfigureAwait(false);
+                        else ConnectionUSB.WriteBytes(pouchData, ItemTreasureAddress);
                         await Task.Delay(500, token).ConfigureAwait(false);
                     }
                     else

@@ -69,7 +69,7 @@ namespace SysBot.Pokemon.WinForms
 
         public void ReloadStatus()
         {
-            L_Left.Text = $"{Config.IP}{Environment.NewLine}{Config.InitialRoutine}";
+            L_Left.Text = Config.ConnectionType == PokeConnectionType.WiFi ? $"{Config.IP}{Environment.NewLine}{Config.InitialRoutine}" : $"{Config.ConnectionType}{Config.DeviceAddress}{Environment.NewLine}{Config.InitialRoutine}";
         }
 
         private DateTime LastUpdateStatus = DateTime.Now;
@@ -78,8 +78,8 @@ namespace SysBot.Pokemon.WinForms
         {
             ReloadStatus();
             var bot = b.Bot;
-            L_Description.Text = $"[{bot.LastTime:hh:mm:ss}] {bot.Connection.Name}: {bot.LastLogged}";
-            L_Left.Text = $"{Config.IP}{Environment.NewLine}{Config.InitialRoutine}";
+            L_Description.Text = Config.ConnectionType == PokeConnectionType.WiFi ? $"[{bot.LastTime:hh:mm:ss}] {bot.Connection.Name}: {bot.LastLogged}" : $"[{bot.LastTime:hh:mm:ss}] {bot.ConnectionUSB.Name}: {bot.LastLogged}";
+            L_Left.Text = Config.ConnectionType == PokeConnectionType.WiFi ? $"{Config.IP}{Environment.NewLine}{Config.InitialRoutine}" : $"{Config.ConnectionType}{Config.DeviceAddress}{Environment.NewLine}{Config.InitialRoutine}";
 
             var lastTime = bot.LastTime;
             if (!b.IsRunning)
@@ -100,6 +100,7 @@ namespace SysBot.Pokemon.WinForms
             // Color decay from Green based on time
             const int threshold = 100;
             Color good = Color.Green;
+            Color goodUSB = Color.DeepSkyBlue;
             Color bad = Color.Red;
 
             var delta = DateTime.Now - lastTime;
@@ -119,7 +120,7 @@ namespace SysBot.Pokemon.WinForms
             {
                 // blend from green->red, favoring green until near saturation
                 var factor = seconds / (double)threshold;
-                var blend = Blend(bad, good, factor * factor);
+                var blend = Blend(bad, Config.ConnectionType == PokeConnectionType.WiFi ? good : goodUSB, factor * factor);
                 PB_Lamp.BackColor = blend;
             }
         }
@@ -157,7 +158,7 @@ namespace SysBot.Pokemon.WinForms
                     if (prompt != DialogResult.Yes)
                         return;
 
-                    bot.Bot.Connection.Reset(bot.Bot.Config.IP);
+                    bot.Bot.Connection.Reset(bot.Bot.Config.IP); // TO DO
                     bot.Start();
                     break;
                 }
