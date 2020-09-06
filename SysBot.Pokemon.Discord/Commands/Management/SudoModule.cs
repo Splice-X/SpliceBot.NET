@@ -57,7 +57,7 @@ namespace SysBot.Pokemon.Discord
             reader.Close();
 
             id = System.Text.RegularExpressions.Regex.Match(id, @"\D*(\d*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
-            var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+            var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (.*$)", System.Text.RegularExpressions.RegexOptions.Multiline);
             if (content.Contains(id))
             {
                 content = content.Replace(parse.Groups[0].Value, $"{id} - 1/11/2000 12:00:00 AM").TrimEnd();

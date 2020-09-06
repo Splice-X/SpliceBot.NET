@@ -63,7 +63,7 @@ namespace SysBot.Pokemon.Discord
                 reader.Close();
 
                 var id = $"{Context.User.Id}";
-                var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (\S*\ \S*\ \w*)", System.Text.RegularExpressions.RegexOptions.Multiline);
+                var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (.*$)", System.Text.RegularExpressions.RegexOptions.Multiline);
                 if (content.Contains(id))
                 {
                     content = content.Replace(parse.Groups[0].Value, $"{id} - {DateTime.Now}").TrimEnd();
