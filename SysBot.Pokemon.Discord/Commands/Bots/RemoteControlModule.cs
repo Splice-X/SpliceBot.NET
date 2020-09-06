@@ -62,7 +62,7 @@ namespace SysBot.Pokemon.Discord
             var bot = SysCordInstance.Runner.GetBot(ip);
             if (bot == null)
             {
-                await ReplyAsync($"No bot has that IP address ({ip}).").ConfigureAwait(false);
+                await ReplyAsync($"No bot has that {(bot?.Bot.Config.ConnectionType == PokeConnectionType.WiFi ? "IP" : "device")} address ({ip}).").ConfigureAwait(false);
                 return;
             }
 
@@ -77,7 +77,9 @@ namespace SysBot.Pokemon.Discord
                 return;
             }
 
-            await bot.Bot.Connection.SendAsync(SwitchCommand.Click(b), CancellationToken.None).ConfigureAwait(false);
+            if (bot.Bot.Config.ConnectionType == PokeConnectionType.WiFi)
+                await bot.Bot.Connection.SendAsync(SwitchCommand.Click(b), CancellationToken.None).ConfigureAwait(false);
+            else  await bot.Bot.ConnectionUSB.SendAsync(SwitchCommand.Click(b));
             await ReplyAsync($"{bot.Bot.Connection.Name} has performed: {b}").ConfigureAwait(false);
         }
 
@@ -89,10 +91,14 @@ namespace SysBot.Pokemon.Discord
                 return;
             }
 
-            await bot.Bot.Connection.SendAsync(SwitchCommand.SetStick(s, x, y), CancellationToken.None).ConfigureAwait(false);
+            if (bot.Bot.Config.ConnectionType == PokeConnectionType.WiFi)
+                await bot.Bot.Connection.SendAsync(SwitchCommand.SetStick(s, x, y), CancellationToken.None).ConfigureAwait(false);
+            else await bot.Bot.ConnectionUSB.SendAsync(SwitchCommand.SetStick(s, x, y));
             await ReplyAsync($"{bot.Bot.Connection.Name} has performed: {s}").ConfigureAwait(false);
             await Task.Delay(ms).ConfigureAwait(false);
-            await bot.Bot.Connection.SendAsync(SwitchCommand.ResetStick(s), CancellationToken.None).ConfigureAwait(false);
+            if (bot.Bot.Config.ConnectionType == PokeConnectionType.WiFi)
+                await bot.Bot.Connection.SendAsync(SwitchCommand.ResetStick(s), CancellationToken.None).ConfigureAwait(false);
+            else await bot.Bot.ConnectionUSB.SendAsync(SwitchCommand.ResetStick(s));
             await ReplyAsync($"{bot.Bot.Connection.Name} has reset the stick position.").ConfigureAwait(false);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.Commands;
+using SysBot.Base;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -92,7 +93,7 @@ namespace SysBot.Pokemon.Discord
                 return;
             }
 
-            bot.Bot.Config.Initialize(task);
+            bot.Bot.Config.Initialize(task, bot.Bot.Config.ConnectionType);
             await Context.Channel.EchoAndReply($"The bot at {ip} ({bot.Bot.Connection.Name}) has been commanded to do {task} as its next task.").ConfigureAwait(false);
         }
 
@@ -105,6 +106,11 @@ namespace SysBot.Pokemon.Discord
             for (int i = 0; i < ips.Length; i++)
             {
                 var bot = SysCordInstance.Runner.GetBot(ips[i]);
+                if (bot?.Bot.Config.ConnectionType == PokeConnectionType.USB)
+                {
+                    await ReplyAsync($"This bot could not be restarted because it's running in USB mode.").ConfigureAwait(false);
+                    return;
+                }
                 if (bot == null)
                 {
                     await ReplyAsync($"No bot has that IP address ({ips[i]}).").ConfigureAwait(false);

@@ -250,7 +250,7 @@ namespace SysBot.Pokemon
 
             // Wait for User Input...
             var pk = await ReadUntilPresent(LinkTradePartnerPokemonOffset, 25_000, 1_000, token).ConfigureAwait(false);
-            var oldEC = await Connection.ReadBytesAsync(LinkTradePartnerPokemonOffset, 4, token).ConfigureAwait(false);
+            var oldEC = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(LinkTradePartnerPokemonOffset, 4, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(LinkTradePartnerPokemonOffset, 4);
             if (pk == null)
             {
                 await ExitTrade(Hub.Config, true, token).ConfigureAwait(false);
@@ -717,7 +717,7 @@ namespace SysBot.Pokemon
 
         private async Task<bool> WaitForPokemonChanged(uint offset, int waitms, int waitInterval, CancellationToken token)
         {
-            var oldEC = await Connection.ReadBytesAsync(offset, 4, token).ConfigureAwait(false);
+            var oldEC = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(offset, 4, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(offset, 4);
             return await ReadUntilChanged(offset, oldEC, waitms, waitInterval, false, token).ConfigureAwait(false);
         }
     }

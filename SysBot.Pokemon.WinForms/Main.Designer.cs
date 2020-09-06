@@ -35,6 +35,7 @@ namespace SysBot.Pokemon.WinForms
             this.FLP_Bots = new System.Windows.Forms.FlowLayoutPanel();
             this.TB_IP = new System.Windows.Forms.TextBox();
             this.CB_Routine = new System.Windows.Forms.ComboBox();
+            this.CB_ConnectionType = new System.Windows.Forms.ComboBox();
             this.NUD_Port = new System.Windows.Forms.NumericUpDown();
             this.B_New = new System.Windows.Forms.Button();
             this.Tab_Hub = new System.Windows.Forms.TabPage();
@@ -67,6 +68,7 @@ namespace SysBot.Pokemon.WinForms
             this.Tab_Bots.Controls.Add(this.FLP_Bots);
             this.Tab_Bots.Controls.Add(this.TB_IP);
             this.Tab_Bots.Controls.Add(this.CB_Routine);
+            this.Tab_Bots.Controls.Add(this.CB_ConnectionType);
             this.Tab_Bots.Controls.Add(this.NUD_Port);
             this.Tab_Bots.Controls.Add(this.B_New);
             this.Tab_Bots.Location = new System.Drawing.Point(4, 22);
@@ -106,6 +108,15 @@ namespace SysBot.Pokemon.WinForms
             this.CB_Routine.Name = "CB_Routine";
             this.CB_Routine.Size = new System.Drawing.Size(101, 21);
             this.CB_Routine.TabIndex = 7;
+            // 
+            // CB_ConnectionType
+            //
+            this.CB_ConnectionType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.CB_ConnectionType.FormattingEnabled = true;
+            this.CB_ConnectionType.Location = new System.Drawing.Point(355, 5);
+            this.CB_ConnectionType.Name = "CB_ConnectionType";
+            this.CB_ConnectionType.Size = new System.Drawing.Size(45, 21);
+            this.CB_ConnectionType.TabIndex = 10;
             // 
             // NUD_Port
             // 
@@ -218,7 +229,6 @@ namespace SysBot.Pokemon.WinForms
             this.Tab_Hub.ResumeLayout(false);
             this.Tab_Logs.ResumeLayout(false);
             this.ResumeLayout(false);
-
         }
 
         #endregion
@@ -232,6 +242,7 @@ namespace SysBot.Pokemon.WinForms
         private System.Windows.Forms.Button B_Start;
         private System.Windows.Forms.TextBox TB_IP;
         private System.Windows.Forms.ComboBox CB_Routine;
+        private System.Windows.Forms.ComboBox CB_ConnectionType;
         private System.Windows.Forms.NumericUpDown NUD_Port;
         private System.Windows.Forms.Button B_New;
         private System.Windows.Forms.FlowLayoutPanel FLP_Bots;
