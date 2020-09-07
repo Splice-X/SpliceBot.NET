@@ -20,7 +20,7 @@ namespace SysBot.Base
 
         public virtual bool Remove(string ip, string deviceAddress, bool callStop)
         {
-            var match = deviceAddress != string.Empty ? Bots.Find(z => z.Bot.Connection.IP == ip) : Bots.Find(z => z.Bot.Config.DeviceAddress == deviceAddress);
+            var match = deviceAddress == string.Empty ? Bots.Find(z => z.Bot.Connection.IP == ip) : Bots.Find(z => z.Bot.Config.DeviceAddress == deviceAddress);
             if (match == null)
                 return false;
 
