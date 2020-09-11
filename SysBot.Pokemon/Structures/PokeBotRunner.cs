@@ -23,12 +23,12 @@ namespace SysBot.Pokemon
                 Hub.Bots.Add(b);
         }
 
-        public override bool Remove(string ip, string deviceAddress, bool callStop)
+        public override bool Remove(string ip, string usbPortIndex, bool callStop)
         {
-            var bot = deviceAddress != string.Empty ? Bots.Find(z => z.Bot.Connection.IP == ip)?.Bot : Bots.Find(z => z.Bot.Config.DeviceAddress == deviceAddress)?.Bot;
+            var bot = Bots.Find(z => z.Bot.Connection.IP == ip && z.Bot.Config.UsbPortIndex == usbPortIndex)?.Bot;
             if (bot is PokeTradeBot b)
                 Hub.Bots.Remove(b);
-            return base.Remove(ip, deviceAddress, callStop);
+            return base.Remove(ip, usbPortIndex, callStop);
         }
 
         public override void StartAll()
