@@ -60,7 +60,7 @@ namespace SysBot.Pokemon
             if (Hub.Config.StopConditions.CatchEncounter && !Hub.Config.Encounter.StrongSpawn)
             {
                 Log("Checking Poké Ball count...");
-                pouchData = Config.ConnectionType == Base.PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(PokeBallOffset, 116, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(PokeBallOffset, 116);
+                pouchData = await Connection.ReadBytesAsync(PokeBallOffset, 116, Config.ConnectionType, token).ConfigureAwait(false);
                 var counts = EncounterCount.GetBallCounts(pouchData);
                 catchCount = counts.PossibleCatches(Ball.Master);
 
@@ -275,9 +275,7 @@ namespace SysBot.Pokemon
                 if (Hub.Config.StopConditions.InjectPokeBalls)
                 {
                     Log("Restoring original pouch data.");
-                    if (Config.ConnectionType == Base.PokeConnectionType.WiFi)
-                        await Connection.WriteBytesAsync(pouchData, PokeBallOffset, token).ConfigureAwait(false);
-                    else ConnectionUSB.WriteBytes(pouchData, PokeBallOffset);
+                    await Connection.WriteBytesAsync(pouchData, PokeBallOffset, Config.ConnectionType, token).ConfigureAwait(false);
                     await Task.Delay(500, token).ConfigureAwait(false);
                 }
                 else

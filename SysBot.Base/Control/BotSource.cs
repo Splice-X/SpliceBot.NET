@@ -22,7 +22,7 @@ namespace SysBot.Base
             Source = new CancellationTokenSource();
 
             // Detach Controllers
-            Task.Run(() => Bot.Config.ConnectionType == PokeConnectionType.WiFi ? Bot.Connection.SendAsync(SwitchCommand.DetachController(), CancellationToken.None) : Bot.ConnectionUSB.SendAsync(SwitchCommand.DetachController()));
+            Task.Run(() => Bot.Connection.SendAsync(SwitchCommand.DetachController(), Bot.Config.ConnectionType, CancellationToken.None));
             IsPaused = IsRunning = false;
         }
 
@@ -40,7 +40,7 @@ namespace SysBot.Base
             if (IsRunning)
                 return;
 
-            Task.Run(() => Bot.Config.ConnectionType == PokeConnectionType.WiFi ? Bot.RunAsync(Source.Token) : Bot.RunUSBAsync(Source.Token)
+            Task.Run(() => Bot.RunAsync(Source.Token)
                 .ContinueWith(ReportFailure, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                 .ContinueWith(_ => IsRunning = false));
 

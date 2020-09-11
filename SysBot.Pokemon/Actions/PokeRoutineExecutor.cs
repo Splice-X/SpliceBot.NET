@@ -31,13 +31,13 @@ namespace SysBot.Pokemon
 
         public async Task<PK8> ReadPokemon(uint offset, CancellationToken token, int size = BoxFormatSlotSize)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(offset, size, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(offset, size);
+            var data = await Connection.ReadBytesAsync(offset, size, Config.ConnectionType, token).ConfigureAwait(false);
             return new PK8(data);
         }
 
         public async Task<PK8> ReadSurpriseTradePokemon(CancellationToken token)
         {
-            var data = await Connection.ReadBytesAsync(SurpriseTradePartnerPokemonOffset, BoxFormatSlotSize, token).ConfigureAwait(false);
+            var data = await Connection.ReadBytesAsync(SurpriseTradePartnerPokemonOffset, BoxFormatSlotSize, Config.ConnectionType, token).ConfigureAwait(false);
             return new PK8(data);
         }
 
@@ -47,16 +47,12 @@ namespace SysBot.Pokemon
             {
                 new EncounterCount().BallIndex(ball, out int result);
                 var apriData = BitConverter.GetBytes(result);
-                if(Config.ConnectionType == PokeConnectionType.WiFi)
-                    await Connection.WriteBytesAsync(apriData, LastUsedBallOffset, token).ConfigureAwait(false);
-                else ConnectionUSB.WriteBytes(apriData, LastUsedBallOffset);
+                await Connection.WriteBytesAsync(apriData, LastUsedBallOffset, Config.ConnectionType, token).ConfigureAwait(false);
                 return;
             }
 
             var data = BitConverter.GetBytes((int)ball);
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.WriteBytesAsync(data, LastUsedBallOffset, token).ConfigureAwait(false);
-            else ConnectionUSB.WriteBytes(data, LastUsedBallOffset);
+            await Connection.WriteBytesAsync(data, LastUsedBallOffset, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task SetBoxPokemon(PK8 pkm, int box, int slot, CancellationToken token, SAV8? sav = null)
@@ -70,9 +66,7 @@ namespace SysBot.Pokemon
             }
             var ofs = GetBoxSlotOffset(box, slot);
             pkm.ResetPartyStats();
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.WriteBytesAsync(pkm.EncryptedPartyData, ofs, token).ConfigureAwait(false);
-            else ConnectionUSB.WriteBytes(pkm.EncryptedPartyData, ofs);
+            await Connection.WriteBytesAsync(pkm.EncryptedPartyData, ofs, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task<PK8> ReadBoxPokemon(int box, int slot, CancellationToken token)
@@ -83,14 +77,12 @@ namespace SysBot.Pokemon
 
         public async Task SetCurrentBox(int box, CancellationToken token)
         {
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.WriteBytesAsync(BitConverter.GetBytes(box), CurrentBoxOffset, token).ConfigureAwait(false);
-            else ConnectionUSB.WriteBytes(BitConverter.GetBytes(box), CurrentBoxOffset);
+            await Connection.WriteBytesAsync(BitConverter.GetBytes(box), CurrentBoxOffset, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task<int> GetCurrentBox(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(CurrentBoxOffset, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(CurrentBoxOffset, 1);
+            var data = await Connection.ReadBytesAsync(CurrentBoxOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0];
         }
 
@@ -117,7 +109,7 @@ namespace SysBot.Pokemon
             sw.Start();
             do
             {
-                var result = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(offset, comparison.Length, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(offset, comparison.Length);
+                var result = await Connection.ReadBytesAsync(offset, comparison.Length, Config.ConnectionType, token).ConfigureAwait(false);
                 if (match == result.SequenceEqual(comparison))
                     return true;
 
@@ -128,13 +120,13 @@ namespace SysBot.Pokemon
 
         public async Task<bool> ReadIsChanged(uint offset, byte[] original, CancellationToken token)
         {
-            var result = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(offset, original.Length, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(offset, original.Length);
+            var result = await Connection.ReadBytesAsync(offset, original.Length, Config.ConnectionType, token).ConfigureAwait(false);
             return !result.SequenceEqual(original);
         }
 
         public async Task<bool> LinkTradePartnerFound(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(LinkTradeSearchingOffset, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(LinkTradeSearchingOffset, 1);
+            var data = await Connection.ReadBytesAsync(LinkTradeSearchingOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] == 0;
         }
 
@@ -145,8 +137,8 @@ namespace SysBot.Pokemon
             GameLang = (LanguageID)sav.Language;
             Version = sav.Version;
             InGameName = sav.OT;
-            Connection.Name = ConnectionUSB.Name = $"{InGameName}-{sav.DisplayTID:000000}";
-            Log($"{(Config.ConnectionType == PokeConnectionType.WiFi ? Connection.IP : ConnectionUSB.Name)} identified as {Connection.Name}, using {GameLang}.");
+            Connection.Name = $"{InGameName}-{sav.DisplayTID:000000}";
+            Log($"{Connection.IP}{(Config.ConnectionType == ConnectionType.USB ? "[USB" + Config.UsbPortIndex + "]" : string.Empty)} identified as {Connection.Name}, using {GameLang}.");
 
             if (await GetTextSpeed(token).ConfigureAwait(false) != TextSpeedOption.Fast)
                 Log("Text speed should be set to FAST. Stop the bot and fix this if you encounter problems.");
@@ -171,7 +163,7 @@ namespace SysBot.Pokemon
         {
             var sav = new SAV8SWSH();
             var info = sav.MyStatus;
-            var read = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(TrainerDataOffset, TrainerDataLength, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(TrainerDataOffset, TrainerDataLength);
+            var read = await Connection.ReadBytesAsync(TrainerDataOffset, TrainerDataLength, Config.ConnectionType, token).ConfigureAwait(false);
             read.CopyTo(info.Data);
             return sav;
         }
@@ -181,7 +173,7 @@ namespace SysBot.Pokemon
             var keys = TradeUtil.GetPresses(code);
             foreach (var key in keys)
             {
-                int delay = Config.ConnectionType == PokeConnectionType.WiFi ? 0_500 : 0;
+                int delay = Config.ConnectionType == ConnectionType.WiFi ? 0_500 : 0;
                 await Click(key, delay, token).ConfigureAwait(false);
             }
             // Confirm Code outside of this method (allow synchronization)
@@ -205,14 +197,14 @@ namespace SysBot.Pokemon
         public async Task<string> GetTradePartnerName(TradeMethod tradeMethod, CancellationToken token)
         {
             var ofs = GetTrainerNameOffset(tradeMethod);
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs, 26, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs, 26);
+            var data = await Connection.ReadBytesAsync(ofs, 26, Config.ConnectionType, token).ConfigureAwait(false);
             return StringConverter.GetString7(data, 0, 26);
         }
 
         public async Task<bool> IsGameConnectedToYComm(CancellationToken token)
         {
             // Reads the Y-Comm Flag is the Game is connected Online
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(IsConnectedOffset, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(IsConnectedOffset, 1);
+            var data = await Connection.ReadBytesAsync(IsConnectedOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] == 1;
         }
 
@@ -303,15 +295,13 @@ namespace SysBot.Pokemon
             // how long we are Soft-Banned and once the Soft-Ban is lifted
             // the Game sets the value back to 0 (1970/01/01 12:00 AM (UTC) )
             var data = BitConverter.GetBytes(0);
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.WriteBytesAsync(data, SoftBanUnixTimespanOffset, token).ConfigureAwait(false);
-            else ConnectionUSB.WriteBytes(data, SoftBanUnixTimespanOffset);
+            await Connection.WriteBytesAsync(data, SoftBanUnixTimespanOffset, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task<bool> CheckIfSoftBanned(CancellationToken token)
         {
             // Check if the Unix Timestamp isn't Zero, if so we are Softbanned.
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(SoftBanUnixTimespanOffset, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(SoftBanUnixTimespanOffset, 1);
+            var data = await Connection.ReadBytesAsync(SoftBanUnixTimespanOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] > 1;
         }
 
@@ -350,13 +340,13 @@ namespace SysBot.Pokemon
 
         public async Task<bool> CheckIfSearchingForLinkTradePartner(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(LinkTradeSearchingOffset, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(LinkTradeSearchingOffset, 1);
+            var data = await Connection.ReadBytesAsync(LinkTradeSearchingOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] == 1;
         }
 
         public async Task<bool> CheckIfSearchingForSurprisePartner(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(SurpriseTradeSearchOffset, 8, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(SurpriseTradeSearchOffset, 8);
+            var data = await Connection.ReadBytesAsync(SurpriseTradeSearchOffset, 8, Config.ConnectionType, token).ConfigureAwait(false);
             return BitConverter.ToUInt32(data, 0) == SurpriseTradeSearch_Searching;
         }
 
@@ -386,7 +376,7 @@ namespace SysBot.Pokemon
         {
             var ofs = GetDaycareEggIsReadyOffset(daycare);
             // Read a single byte of the Daycare metadata to check the IsEggReady flag.
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(ofs, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(ofs, 1);
+            var data = await Connection.ReadBytesAsync(ofs, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] == 1;
         }
 
@@ -397,32 +387,30 @@ namespace SysBot.Pokemon
             // Just setting the IsEggReady flag won't refresh the seed; we want a different egg every time.
             var data = new byte[] { 0xB4, 0, 0, 0 }; // 180
             var ofs = GetDaycareStepCounterOffset(daycare);
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.WriteBytesAsync(data, ofs, token).ConfigureAwait(false);
-            else ConnectionUSB.WriteBytes(data, ofs);
+            await Connection.WriteBytesAsync(data, ofs, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task<bool> IsCorrectScreen(uint expectedScreen, CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(CurrentScreenOffset, 4, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(CurrentScreenOffset, 4);
+            var data = await Connection.ReadBytesAsync(CurrentScreenOffset, 4, Config.ConnectionType, token).ConfigureAwait(false);
             return BitConverter.ToUInt32(data, 0) == expectedScreen;
         }
 
         public async Task<uint> GetCurrentScreen(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(CurrentScreenOffset, 4, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(CurrentScreenOffset, 4);
+            var data = await Connection.ReadBytesAsync(CurrentScreenOffset, 4, Config.ConnectionType, token).ConfigureAwait(false);
             return BitConverter.ToUInt32(data, 0);
         }
 
         public async Task<bool> IsInBattle(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(Version == GameVersion.SH ? InBattleRaidOffsetSH : InBattleRaidOffsetSW, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(Version == GameVersion.SH ? InBattleRaidOffsetSH : InBattleRaidOffsetSW, 1);
+            var data = await Connection.ReadBytesAsync(Version == GameVersion.SH ? InBattleRaidOffsetSH : InBattleRaidOffsetSW, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] == (Version == GameVersion.SH ? 0x40 : 0x41);
         }
 
         public async Task<bool> IsInBox(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(CurrentScreenOffset, 4, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(CurrentScreenOffset, 4);
+            var data = await Connection.ReadBytesAsync(CurrentScreenOffset, 4, Config.ConnectionType, token).ConfigureAwait(false);
             var dataint = BitConverter.ToUInt32(data, 0);
             return dataint == CurrentScreen_Box1 || dataint == CurrentScreen_Box2;
         }
@@ -432,14 +420,14 @@ namespace SysBot.Pokemon
             // Uses CurrentScreenOffset and compares the value to CurrentScreen_Overworld.
             if (config.ScreenDetection == ScreenDetectionMode.Original)
             {
-                var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(CurrentScreenOffset, 4, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(CurrentScreenOffset, 4);
+                var data = await Connection.ReadBytesAsync(CurrentScreenOffset, 4, Config.ConnectionType, token).ConfigureAwait(false);
                 var dataint = BitConverter.ToUInt32(data, 0);
                 return dataint == CurrentScreen_Overworld1 || dataint == CurrentScreen_Overworld2;
             }
             // Uses an appropriate OverworldOffset for the console language.
             else if (config.ScreenDetection == ScreenDetectionMode.ConsoleLanguageSpecific)
             {
-                var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(GetOverworldOffset(config.ConsoleLanguage), 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(GetOverworldOffset(config.ConsoleLanguage), 1);
+                var data = await Connection.ReadBytesAsync(GetOverworldOffset(config.ConsoleLanguage), 1, Config.ConnectionType, token).ConfigureAwait(false);
                 return data[0] == 1;
             }
             return false;
@@ -447,17 +435,15 @@ namespace SysBot.Pokemon
 
         public async Task<TextSpeedOption> GetTextSpeed(CancellationToken token)
         {
-            var data = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(TextSpeedOffset, 1, token).ConfigureAwait(false): ConnectionUSB.ReadBytes(TextSpeedOffset, 1);
+            var data = await Connection.ReadBytesAsync(TextSpeedOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return (TextSpeedOption)(data[0] & 3);
         }
 
         public async Task SetTextSpeed(TextSpeedOption speed, CancellationToken token)
         {
-            var textSpeedByte = Config.ConnectionType == PokeConnectionType.WiFi ? await Connection.ReadBytesAsync(TextSpeedOffset, 1, token).ConfigureAwait(false) : ConnectionUSB.ReadBytes(TextSpeedOffset, 1);
+            var textSpeedByte = await Connection.ReadBytesAsync(TextSpeedOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             var data = new[] { (byte)((textSpeedByte[0] & 0xFC) | (int)speed) };
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.WriteBytesAsync(data, TextSpeedOffset, token).ConfigureAwait(false);
-            else ConnectionUSB.WriteBytes(data, TextSpeedOffset);
+            await Connection.WriteBytesAsync(data, TextSpeedOffset, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public static uint GetOverworldOffset(ConsoleLanguageParameter value)
