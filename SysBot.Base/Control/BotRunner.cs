@@ -13,14 +13,14 @@ namespace SysBot.Base
 
         public virtual void Add(SwitchRoutineExecutor<T> bot)
         {
-            if (Bots.Any(z => z.Bot.Connection.IP == bot.Connection.IP && z.Bot.Config.ConnectionType != PokeConnectionType.USB))
-                throw new ArgumentException($"{(bot.Config.ConnectionType == PokeConnectionType.WiFi ? nameof(bot.Connection.IP) : nameof(bot.Config.DeviceAddress))} has already been added.");
+            if (Bots.Any(z => z.Bot.Connection.IP == bot.Connection.IP && z.Bot.Config.UsbPortIndex == bot.Config.UsbPortIndex && z.Bot.Config.ConnectionType == bot.Config.ConnectionType))
+                throw new ArgumentException($"{(bot.Config.ConnectionType == ConnectionType.WiFi ? nameof(bot.Connection.IP) : nameof(bot.Config.UsbPortIndex))} has already been added.");
             Bots.Add(new BotSource<T>(bot));
         }
 
-        public virtual bool Remove(string ip, string deviceAddress, bool callStop)
+        public virtual bool Remove(string ip, string usbPortIndex, bool callStop)
         {
-            var match = deviceAddress == string.Empty ? Bots.Find(z => z.Bot.Connection.IP == ip) : Bots.Find(z => z.Bot.Config.DeviceAddress == deviceAddress);
+            var match = Bots.Find(z => z.Bot.Connection.IP == ip && z.Bot.Config.UsbPortIndex == usbPortIndex);
             if (match == null)
                 return false;
 
@@ -61,6 +61,6 @@ namespace SysBot.Base
         }
 
         public BotSource<T>? GetBot(T config) => Bots.Find(z => z.Bot.Config == config);
-        public BotSource<T>? GetBot(string ip) => Bots.Find(z => z.Bot.Config.ConnectionType == PokeConnectionType.WiFi ? z.Bot.Config.IP == ip : z.Bot.Config.DeviceAddress == ip);
+        public BotSource<T>? GetBot(string ip) => Bots.Find(z => z.Bot.Config.ConnectionType == ConnectionType.WiFi ? z.Bot.Config.IP == ip : z.Bot.Config.UsbPortIndex == ip);
     }
 }

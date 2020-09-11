@@ -11,14 +11,12 @@ namespace SysBot.Base
     public abstract class SwitchRoutineExecutor<T> where T : SwitchBotConfig
     {
         public readonly SwitchConnectionAsync Connection;
-        public readonly SwitchConnectionUSB<T> ConnectionUSB;
         public readonly T Config;
 
         protected SwitchRoutineExecutor(T cfg)
         {
             Config = cfg;
-            Connection = new SwitchConnectionAsync(cfg.IP, cfg.Port);
-            ConnectionUSB = new SwitchConnectionUSB<T>(cfg);
+            Connection = new SwitchConnectionAsync(cfg.IP, cfg.Port, cfg);
         }
 
         public string LastLogged { get; private set; } = "Not Started";
@@ -28,9 +26,7 @@ namespace SysBot.Base
 
         public void Log(string message)
         {
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                Connection.Log(message);
-            else ConnectionUSB.LogUSB(message);
+            Connection.Log(message);
             LastLogged = message;
             LastTime = DateTime.Now;
         }
@@ -48,23 +44,12 @@ namespace SysBot.Base
             Connection.Disconnect();
         }
 
-        public async Task RunUSBAsync(CancellationToken token)
-        {
-            ConnectionUSB.Connect();
-            Log("Initializing connection with USB device...");
-            await EchoCommands(false, token).ConfigureAwait(false);
-            await MainLoop(token).ConfigureAwait(false);
-            ConnectionUSB.Disconnect();
-        }
-
         protected abstract Task MainLoop(CancellationToken token);
         public abstract void SoftStop();
 
         public async Task Click(SwitchButton b, int delay, CancellationToken token)
         {
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(SwitchCommand.Click(b), token).ConfigureAwait(false); 
-            else await ConnectionUSB.SendAsync(SwitchCommand.Click(b)).ConfigureAwait(false);
+            await Connection.SendAsync(SwitchCommand.Click(b), Config.ConnectionType, token).ConfigureAwait(false);
             await Task.Delay(delay, token).ConfigureAwait(false);
         }
 
@@ -72,16 +57,12 @@ namespace SysBot.Base
         {
             // Set hold delay
             var delaycgf = SwitchCommand.Configure(SwitchConfigureParameter.buttonClickSleepTime, hold);
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(delaycgf, token).ConfigureAwait(false);
-            else await ConnectionUSB.SendAsync(delaycgf);
+            await Connection.SendAsync(delaycgf, Config.ConnectionType, token).ConfigureAwait(false);
             // Press the button
             await Click(b, delay, token).ConfigureAwait(false);
             // Reset delay
             delaycgf = SwitchCommand.Configure(SwitchConfigureParameter.buttonClickSleepTime, 50); // 50 ms
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(delaycgf, token).ConfigureAwait(false);
-            else await ConnectionUSB.SendAsync(delaycgf);
+            await Connection.SendAsync(delaycgf, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task DaisyChainCommands(int Delay, SwitchButton[] buttons, CancellationToken token)
@@ -89,34 +70,26 @@ namespace SysBot.Base
             SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, Delay);
             var commands = buttons.Select(SwitchCommand.Click).ToArray();
             var chain = commands.SelectMany(x => x).ToArray();
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(chain, token).ConfigureAwait(false);
-            else await ConnectionUSB.SendAsync(chain);
+            await Connection.SendAsync(chain, Config.ConnectionType, token).ConfigureAwait(false);
             SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, 0);
         }
 
         public async Task SetStick(SwitchStick stick, short x, short y, int delay, CancellationToken token)
         {
             var cmd = SwitchCommand.SetStick(stick, x, y);
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(cmd, token).ConfigureAwait(false);
-            else await ConnectionUSB.SendAsync(cmd);
+            await Connection.SendAsync(cmd, Config.ConnectionType, token).ConfigureAwait(false);
             await Task.Delay(delay, token).ConfigureAwait(false);
         }
 
         public async Task DetachController(CancellationToken token)
         {
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(SwitchCommand.DetachController(), token).ConfigureAwait(false);
-            else await ConnectionUSB.SendAsync(SwitchCommand.DetachController());
+            await Connection.SendAsync(SwitchCommand.DetachController(), Config.ConnectionType, token).ConfigureAwait(false);
         }
 
         public async Task EchoCommands(bool value, CancellationToken token)
         {
             var cmd = SwitchCommand.Configure(SwitchConfigureParameter.echoCommands, value ? 1 : 0);
-            if (Config.ConnectionType == PokeConnectionType.WiFi)
-                await Connection.SendAsync(cmd, token).ConfigureAwait(false);
-            else await ConnectionUSB.SendAsync(cmd);
+            await Connection.SendAsync(cmd, Config.ConnectionType, token).ConfigureAwait(false);
         }
     }
 }

@@ -67,7 +67,7 @@ namespace SysBot.Pokemon.WinForms
             CB_Routine.DataSource = list;
             CB_Routine.SelectedIndex = 2; // default option
 
-            var connectionTypes = (PokeConnectionType[])Enum.GetValues(typeof(PokeConnectionType));
+            var connectionTypes = (ConnectionType[])Enum.GetValues(typeof(ConnectionType));
             var connectionList = connectionTypes.Select(z => new ComboItem(z.ToString(), (int)z)).ToArray();
             CB_ConnectionType.DisplayMember = nameof(ComboItem.Text);
             CB_ConnectionType.ValueMember = nameof(ComboItem.Value);
@@ -177,7 +177,8 @@ namespace SysBot.Pokemon.WinForms
             var cfg = CreateNewBotConfig();
             if (!AddBot(cfg))
             {
-                WinFormsUtil.Alert(cfg.ConnectionType == PokeConnectionType.WiFi ? "Unable to add bot; ensure details are valid and not duplicate with an already existing bot." : "Unable to add bot; ensure additional USB bots are plugged in.");
+                WinFormsUtil.Alert(cfg.ConnectionType == ConnectionType.WiFi ? "Unable to add bot; ensure details are valid and not duplicate with an already existing bot."
+                    : "Unable to add bot; ensure additional USB bots are plugged in.");
                 return;
             }
             System.Media.SystemSounds.Asterisk.Play();
@@ -185,7 +186,7 @@ namespace SysBot.Pokemon.WinForms
 
         private bool AddBot(PokeBotConfig cfg)
         {
-            if (!cfg.IsValidIP() || cfg.ConnectionType == PokeConnectionType.USB && Bots.Any(z => z.DeviceAddress == cfg.DeviceAddress))
+            if (!cfg.IsValidIP() || cfg.UsbPortIndex == "" && cfg.ConnectionType == ConnectionType.USB)
                 return false;
 
             var newbot = RunningEnvironment.CreateBotFromConfig(cfg);
@@ -221,7 +222,7 @@ namespace SysBot.Pokemon.WinForms
             row.Remove += (s, e) =>
             {
                 Bots.Remove(row.Config);
-                RunningEnvironment.Remove(row.Config.IP, row.Config.DeviceAddress, !RunningEnvironment.Hub.Config.SkipConsoleBotCreation);
+                RunningEnvironment.Remove(row.Config.IP, row.Config.UsbPortIndex, !RunningEnvironment.Hub.Config.SkipConsoleBotCreation);
                 FLP_Bots.Controls.Remove(row);
             };
         }
@@ -231,10 +232,10 @@ namespace SysBot.Pokemon.WinForms
             var type = (PokeRoutineType)WinFormsUtil.GetIndex(CB_Routine);
             var ip = TB_IP.Text;
             var port = (int)NUD_Port.Value;
-            var connectionType = (PokeConnectionType)WinFormsUtil.GetIndex(CB_ConnectionType);
-            var deviceAddress = connectionType == PokeConnectionType.USB ? SwitchConnectionUSB<SwitchBotConfig>.GetUsbAddress() : string.Empty;
+            var connectionType = (ConnectionType)WinFormsUtil.GetIndex(CB_ConnectionType);
+            var usbPortIndex = connectionType == ConnectionType.USB ? SwitchConnectionUSB.GetUsbPortIndex() : string.Empty;
 
-            var cfg = SwitchBotConfig.GetConfig<PokeBotConfig>(ip, port, connectionType, deviceAddress);
+            var cfg = SwitchBotConfig.GetConfig<PokeBotConfig>(ip, port, connectionType, usbPortIndex);
             cfg.Initialize(type, connectionType);
             return cfg;
         }
