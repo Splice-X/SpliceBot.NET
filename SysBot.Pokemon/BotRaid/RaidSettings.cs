@@ -59,6 +59,18 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("When set, the bot will roll species and set date to 2000, resetting it once it reaches 2060.")]
         public bool AutoRoll { get; set; } = false;
 
+        [Category(Hosting), Description("If AutoRoll enabled, specify Pokémon species to stop rolling on and to soft-lock host via airplane mode.")]
+        public Species AutoRollSpecies { get; set; } = Species.None;
+
+        [Category(Hosting), Description("If using USB-Botbase, quit out the raid by toggling airplane mode. For regular hosting and soft-lock AutoRoll.")]
+        public bool AirplaneQuitout { get; set; } = false;
+
+        [Category(Hosting), Description("Extra time in milliseconds to wait to toggle airplane mode.")]
+        public int ExtraTimeAirplane { get; set; } = 0;
+
+        [Category(Hosting), Description("Time in milliseconds to wait for ldn_mitm (if using it) to unfreeze after toggling airplane mode.")]
+        public int MitmDelay { get; set; } = 0;
+
         [Category(Hosting), Description("Extra time in milliseconds to enter a lobby for AutoRoll.")]
         public int ExtraTimeLoadLobbyAR { get; set; } = 0;
 

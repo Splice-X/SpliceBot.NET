@@ -2,19 +2,24 @@
 using LibUsbDotNet.Main;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 
 namespace SysBot.Base
 {
-    public class SwitchConnectionUSB
+    public class SwitchConnectionUSB : SwitchBotConfig
     {
+        public SwitchBotConfig Config;
         private UsbDevice? SwDevice;
         private UsbEndpointReader? reader;
         private UsbEndpointWriter? writer;
         private const int MaximumTransferSize = 468;
         private readonly object _sync = new object();
-        public static readonly List<BotSource<SwitchBotConfig>> Bots = new List<BotSource<SwitchBotConfig>>();
+        public static List<string> PortIndexesAdded = new List<string>();
+
+        public SwitchConnectionUSB(SwitchBotConfig cfg)
+        {
+            Config = cfg;
+        }
 
         public void ConnectUSB()
         {
@@ -23,8 +28,7 @@ namespace SysBot.Base
                 foreach (UsbRegistry ur in UsbDevice.AllLibUsbDevices)
                 {
                     ur.DeviceProperties.TryGetValue("Address", out object addr);
-                    bool added = Bots.Any(z => z.Bot.Config.UsbPortIndex == addr.ToString());
-                    if (ur.Vid == 0x057E && ur.Pid == 0x3000 && !added)
+                    if (ur.Vid == 0x057E && ur.Pid == 0x3000 && Config.UsbPortIndex == addr.ToString())
                         SwDevice = ur.Device;
                 }
 
@@ -178,13 +182,14 @@ namespace SysBot.Base
             foreach (UsbRegistry ur in UsbDevice.AllLibUsbDevices)
             {
                 bool portIndex = ur.DeviceProperties.TryGetValue("Address", out object addr);
-                bool added = Bots.Any(z => z.Bot.Config.UsbPortIndex == addr.ToString());
-                if (ur.Vid == 0x057E && ur.Pid == 0x3000 && portIndex && !added)
+                bool added = PortIndexesAdded.Contains(addr.ToString());
+                if (ur.Vid == 0x057E && ur.Pid == 0x3000 && !added)
                 {
                     UsbDevice usbDevice = ur.Device;
                     if (usbDevice != null)
                     {
                         av = addr.ToString();
+                        PortIndexesAdded.Add(av);
                         break;
                     }
                 }
