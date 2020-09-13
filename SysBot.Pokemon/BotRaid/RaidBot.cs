@@ -440,7 +440,7 @@ namespace SysBot.Pokemon
                 await Click(DRIGHT, Config.ConnectionType == ConnectionType.WiFi ? 0_150 : 0, token).ConfigureAwait(false);
             await Click(A, 0_750, token).ConfigureAwait(false);
             await Click(HOME, 1_000, token).ConfigureAwait(false);
-            await Click(HOME, 2_000, token).ConfigureAwait(false);
+            await Click(HOME, 2_000 + Settings.ExtraTimeDaySkipLobbyReturnAR, token).ConfigureAwait(false);
             ResetCount++; //Skip one year, return back into game, increase ResetCount
         }
 
@@ -473,7 +473,7 @@ namespace SysBot.Pokemon
 
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
                 await Click(B, 0_500, token).ConfigureAwait(false);
-            await Task.Delay(Settings.MitmDelay).ConfigureAwait(false);
+            await Task.Delay(Settings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
 
             if (addFriends || deleteFriends)
             {
@@ -513,8 +513,7 @@ namespace SysBot.Pokemon
         private async Task SoftLockLobbyExit(CancellationToken token)
         {
             Log("Exiting lobby to keep soft lock.");
-            await Click(DDOWN, 0_500, token).ConfigureAwait(false);
-            await Click(A, 1_250, token).ConfigureAwait(false);
+            await Click(B, 1_250, token).ConfigureAwait(false);
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Click(B, 0_500, token).ConfigureAwait(false);
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
