@@ -22,7 +22,7 @@ namespace SysBot.Base
             IP = ipaddress;
             Port = port;
             UsbPortIndex = cfg.UsbPortIndex;
-            ConnectionUSB = new SwitchConnectionUSB();
+            ConnectionUSB = new SwitchConnectionUSB(cfg);
             Config = cfg;
             Name = $"{IP}{(cfg.ConnectionType == ConnectionType.USB ? " [#"+UsbPortIndex+"]" : string.Empty)}: {GetType().Name}";
             Log("Connection details created!");

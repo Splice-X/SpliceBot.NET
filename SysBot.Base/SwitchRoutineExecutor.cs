@@ -65,6 +65,14 @@ namespace SysBot.Base
             await Connection.SendAsync(delaycgf, Config.ConnectionType, token).ConfigureAwait(false);
         }
 
+        public async Task HoldUSB(SwitchButton b, int hold, int delay, CancellationToken token)
+        {
+            await Connection.SendAsync(SwitchCommand.Hold(b), Config.ConnectionType, token).ConfigureAwait(false);
+            await Task.Delay(hold);
+            await Connection.SendAsync(SwitchCommand.Release(b), Config.ConnectionType, token).ConfigureAwait(false);
+            await Task.Delay(delay);
+        }
+
         public async Task DaisyChainCommands(int Delay, SwitchButton[] buttons, CancellationToken token)
         {
             SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, Delay);
