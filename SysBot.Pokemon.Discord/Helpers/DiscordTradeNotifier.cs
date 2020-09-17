@@ -58,20 +58,11 @@ namespace SysBot.Pokemon.Discord
 
             if (info.Type == PokeTradeType.EggRoll && Hub.Config.Trade.EggRollCooldown > 0) // Add cooldown if trade completed
             {
-                System.IO.StreamReader reader = new System.IO.StreamReader("EggRollCooldown.txt");
-                var content = reader.ReadToEnd();
-                reader.Close();
-
-                var id = $"{Context.User.Id}";
-                var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (.*$)", System.Text.RegularExpressions.RegexOptions.Multiline);
-                if (content.Contains(id))
-                {
-                    content = content.Replace(parse.Groups[0].Value, $"{id} - {DateTime.Now}").TrimEnd();
-                    System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRollCooldown.txt");
-                    writer.WriteLine(content);
-                    writer.Close();
-                }
-                else System.IO.File.AppendAllText("EggRollCooldown.txt", $"{id} - {DateTime.Now}{Environment.NewLine}");
+                var id = Context.User.Id.ToString();
+                var line = TradeExtensions.EggRollCooldown.FirstOrDefault(z => z.Contains(id));
+                if (line != null)
+                    TradeExtensions.EggRollCooldown.Remove(TradeExtensions.EggRollCooldown.FirstOrDefault(z => z.Contains(id)));
+                TradeExtensions.EggRollCooldown.Add($"{id},{DateTime.Now}");
             }
         }
 

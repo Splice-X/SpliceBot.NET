@@ -49,22 +49,12 @@ namespace SysBot.Pokemon.Discord
         // ReSharper disable once UnusedParameter.Global
         public async Task ClearCooldown([Remainder] string id)
         {
-            if (!System.IO.File.Exists("EggRollCooldown.txt"))
-                System.IO.File.Create("EggRollCooldown.txt").Close();
-
-            System.IO.StreamReader reader = new System.IO.StreamReader("EggRollCooldown.txt");
-            var content = reader.ReadToEnd();
-            reader.Close();
-
             id = System.Text.RegularExpressions.Regex.Match(id, @"\D*(\d*)", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value;
-            var parse = System.Text.RegularExpressions.Regex.Match(content, @"(" + id + @") - (.*$)", System.Text.RegularExpressions.RegexOptions.Multiline);
-            if (content.Contains(id))
+            var line = TradeExtensions.EggRollCooldown.FirstOrDefault(z => z.Contains(id));
+            if (line != null)
             {
-                content = content.Replace(parse.Groups[0].Value, $"{id} - 1/11/2000 12:00:00 AM").TrimEnd();
-                System.IO.StreamWriter writer = new System.IO.StreamWriter("EggRollCooldown.txt");
-                writer.WriteLine(content);
-                writer.Close();
-                await ReplyAsync("Done.").ConfigureAwait(false);
+                TradeExtensions.EggRollCooldown.Remove(TradeExtensions.EggRollCooldown.FirstOrDefault(z => z.Contains(id)));
+                await ReplyAsync("Cooldown cleared.").ConfigureAwait(false);
             }
             else await ReplyAsync("User with that ID not found.").ConfigureAwait(false);
         }
