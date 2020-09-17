@@ -29,7 +29,7 @@ namespace SysBot.Pokemon.Discord
 
         private static string GetDetailedSummary(PokeRoutineExecutor z)
         {
-            return $"- {z.Connection.IP} | {z.Connection.Name} - {z.Config.CurrentRoutineType} ~ {z.LastTime:hh:mm:ss} | {z.LastLogged}";
+            return $"- {z.Connection.IP}{(z.Config.ConnectionType == ConnectionType.USB ? "[USB"+z.Config.UsbPortIndex+"]" : string.Empty)} | {z.Connection.Name} - {z.Config.CurrentRoutineType} ~ {z.LastTime:hh:mm:ss} | {z.LastLogged}";
         }
 
         [Command("botStart")]
@@ -40,7 +40,7 @@ namespace SysBot.Pokemon.Discord
             var bot = SysCordInstance.Runner.GetBot(ip);
             if (bot == null)
             {
-                await ReplyAsync($"No bot has that IP address ({ip}).").ConfigureAwait(false);
+                await ReplyAsync($"{(bot?.Bot.Config.ConnectionType == ConnectionType.WiFi ? $"No bot has that IP address ({ip})." : $"No bot has that USB port index ({ip}).")}").ConfigureAwait(false);
                 return;
             }
 
@@ -56,7 +56,7 @@ namespace SysBot.Pokemon.Discord
             var bot = SysCordInstance.Runner.GetBot(ip);
             if (bot == null)
             {
-                await ReplyAsync($"No bot has that IP address ({ip}).").ConfigureAwait(false);
+                await ReplyAsync($"{(bot?.Bot.Config.ConnectionType == ConnectionType.WiFi ? $"No bot has that IP address ({ip})." : $"No bot has that USB port index ({ip}).")}").ConfigureAwait(false);
                 return;
             }
 
@@ -73,7 +73,7 @@ namespace SysBot.Pokemon.Discord
             var bot = SysCordInstance.Runner.GetBot(ip);
             if (bot == null)
             {
-                await ReplyAsync($"No bot has that IP address ({ip}).").ConfigureAwait(false);
+                await ReplyAsync($"{(bot?.Bot.Config.ConnectionType == ConnectionType.WiFi ? $"No bot has that IP address ({ip})." : $"No bot has that USB port index ({ip}).")}").ConfigureAwait(false);
                 return;
             }
 
@@ -89,7 +89,7 @@ namespace SysBot.Pokemon.Discord
             var bot = SysCordInstance.Runner.GetBot(ip);
             if (bot == null)
             {
-                await ReplyAsync($"No bot has that IP address ({ip}).").ConfigureAwait(false);
+                await ReplyAsync($"{(bot?.Bot.Config.ConnectionType == ConnectionType.WiFi ? $"No bot has that IP address ({ip})." : $"No bot has that USB port index ({ip}).")}").ConfigureAwait(false);
                 return;
             }
 

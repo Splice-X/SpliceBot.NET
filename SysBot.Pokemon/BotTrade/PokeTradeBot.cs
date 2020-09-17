@@ -289,7 +289,7 @@ namespace SysBot.Pokemon
 
                 if (adOT && clone.OT_Name != $"{TrainerName}")
                 {
-                    clone.OT_Name = $"{TrainerName}";
+                    clone.OT_Name = clone.FatefulEncounter ? clone.OT_Name : $"{TrainerName}";
                     clone.ClearNickname();
                     clone.PKRS_Infected = false;
                     clone.PKRS_Cured = false;
@@ -299,7 +299,7 @@ namespace SysBot.Pokemon
                 }
                 else
                 {
-                    poke.SendNotification(this, "```fix\nNo website ad detected in Nickname or OT. Exiting trade...```");
+                    poke.SendNotification(this, "```fix\nNo ad detected in Nickname or OT. Exiting trade...```");
                     await ExitTrade(Hub.Config, true, token).ConfigureAwait(false);
                     return PokeTradeResult.IllegalTrade;
                 }
@@ -307,13 +307,13 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(clone);
                 if (!la.Valid && Hub.Config.Legality.VerifyLegality)
                 {
-                    Log($"FixAd request has detected an invalid Pokémon: {(Species)clone.Species}");
+                    Log($"FixOT request has detected an invalid Pokémon: {(Species)clone.Species}");
                     if (DumpSetting.Dump)
                         DumpPokemon(DumpSetting.DumpFolder, "hacked", clone);
 
                     var report = la.Report();
                     Log(report);
-                    poke.SendNotification(this, "This Pokémon is not legal per PKHeX's legality checks. I am forbidden from cloning this. Exiting trade.");
+                    poke.SendNotification(this, "This Pokémon is not legal per PKHeX's legality checks. I am forbidden from fixing this. Exiting trade.");
                     poke.SendNotification(this, report);
 
                     await ExitTrade(Hub.Config, true, token).ConfigureAwait(false);
