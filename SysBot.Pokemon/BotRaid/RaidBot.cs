@@ -388,7 +388,7 @@ namespace SysBot.Pokemon
                 {
                     for (int i = 0; i < 2; i++)
                         await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
-                    await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false); //Collect watts, invite others
+                    await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
 
                     var data = await Connection.ReadBytesAsync(RaidBossOffset, 2, Config.ConnectionType, token).ConfigureAwait(false);
                     raidBossSpecies = BitConverter.ToUInt16(data, 0);
@@ -408,7 +408,7 @@ namespace SysBot.Pokemon
 
                 for (int i = 0; i < 2; i++)
                     await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
-                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false); //Collect watts, invite others
+                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
                 await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); //Collect watts, invite others
             }
         }
