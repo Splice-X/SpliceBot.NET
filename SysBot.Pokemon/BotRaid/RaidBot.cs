@@ -146,7 +146,7 @@ namespace SysBot.Pokemon
                 await Task.Delay(1_000, token).ConfigureAwait(false);
                 timetowait -= 1_000;
 
-                if (PlayerReady[1] || PlayerReady[2] || PlayerReady[3] && Config.ConnectionType == ConnectionType.USB && Hub.Config.Raid.AirplaneQuitout) // Need at least one player to be ready
+                if ((PlayerReady[1] || PlayerReady[2] || PlayerReady[3]) && Config.ConnectionType == ConnectionType.USB && Hub.Config.Raid.AirplaneQuitout) // Need at least one player to be ready
                     airplaneUsable = true;
 
                 if (softLock && timetowait == 0 && !airplaneUsable) // Would lose soft lock if we host by closing the game
