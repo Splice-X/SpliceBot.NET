@@ -84,7 +84,7 @@ namespace SysBot.Pokemon
                 Log($"Raid host {encounterCount} finished.");
                 Counts.AddCompletedRaids();
 
-                if (airplaneUsable && !Settings.AutoRoll || airplaneUsable && softLock)
+                if (airplaneUsable && (!Settings.AutoRoll || softLock))
                     await ResetGameAirplaneAsync(token).ConfigureAwait(false);
                 else await ResetGameAsync(token).ConfigureAwait(false);
             }
@@ -146,10 +146,10 @@ namespace SysBot.Pokemon
                 await Task.Delay(1_000, token).ConfigureAwait(false);
                 timetowait -= 1_000;
 
-                if (PlayerReady[1] || PlayerReady[2] && Config.ConnectionType == ConnectionType.USB && Hub.Config.Raid.AirplaneQuitout)
+                if (PlayerReady[1] || PlayerReady[2] || PlayerReady[3] && Config.ConnectionType == ConnectionType.USB && Hub.Config.Raid.AirplaneQuitout) // Need at least one player to be ready
                     airplaneUsable = true;
 
-                if (softLock && timetowait == 0 && !airplaneUsable)
+                if (softLock && timetowait == 0 && !airplaneUsable) // Would lose soft lock if we host by closing the game
                 {
                     await SoftLockLobbyExit(token).ConfigureAwait(false);
                     await HostRaidAsync(code, token).ConfigureAwait(false);
@@ -165,7 +165,7 @@ namespace SysBot.Pokemon
                a raid by the end, something has gone wrong and we should quit trying. */
             while (timetojoinraid > 0 && !await IsInBattle(token).ConfigureAwait(false))
             {
-                if (softLock)
+                if (softLock) // Because we didn't ready up earlier if we're soft locked
                 {
                     await Click(DUP, 1_000, token).ConfigureAwait(false);
                     await Click(A, 1_000, token).ConfigureAwait(false);
@@ -394,7 +394,7 @@ namespace SysBot.Pokemon
                     raidBossSpecies = BitConverter.ToUInt16(data, 0);
                     EchoUtil.Echo($"Rolling complete. Raid for {(Species)raidBossSpecies} will be going up shortly!");
 
-                    if ((Species)raidBossSpecies == Settings.AutoRollSpecies)
+                    if ((Species)raidBossSpecies == Settings.AutoRollSpecies && Config.ConnectionType == ConnectionType.USB && Settings.AirplaneQuitout)
                     {
                         softLock = true;
                         EchoUtil.Echo($"Soft locking on {(Species)raidBossSpecies}.");
@@ -473,7 +473,7 @@ namespace SysBot.Pokemon
 
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
                 await Click(B, 0_500, token).ConfigureAwait(false);
-            await Task.Delay(Settings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
+            await Task.Delay(5_000 + Settings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
 
             if (addFriends || deleteFriends)
             {
@@ -513,11 +513,11 @@ namespace SysBot.Pokemon
         private async Task SoftLockLobbyExit(CancellationToken token)
         {
             Log("Exiting lobby to keep soft lock.");
-            await Click(B, 1_250, token).ConfigureAwait(false);
-            await Click(A, 1_000, token).ConfigureAwait(false);
-            await Click(B, 0_500, token).ConfigureAwait(false);
+            await Click(B, 2_000, token).ConfigureAwait(false);
+            await Click(A, 2_000, token).ConfigureAwait(false);
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
-                await Task.Delay(2_000, token).ConfigureAwait(false);
+                await Click(B, 2_000, token).ConfigureAwait(false); // Click B to avoid possible errors?
+            Log("Back in the overworld! Re-hosting the raid.");
         }
 
         private void RaidLog(string linkcodemsg, string raiddescmsg)

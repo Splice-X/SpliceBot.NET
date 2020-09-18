@@ -68,7 +68,7 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("Extra time in milliseconds to wait to toggle airplane mode.")]
         public int ExtraTimeAirplane { get; set; } = 0;
 
-        [Category(Hosting), Description("Time in milliseconds to wait for game to unfreeze after toggling airplane mode.")]
+        [Category(Hosting), Description("Time in milliseconds to wait for game to unfreeze after toggling airplane mode and YComm state to refresh.")]
         public int AirplaneConnectionFreezeDelay { get; set; } = 0;
 
         [Category(Hosting), Description("Extra time in milliseconds to enter a lobby for AutoRoll.")]
