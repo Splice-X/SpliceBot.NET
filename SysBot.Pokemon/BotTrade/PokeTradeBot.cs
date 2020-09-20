@@ -295,6 +295,7 @@ namespace SysBot.Pokemon
                     clone.PKRS_Cured = false;
                     clone.PKRS_Days = 0;
                     clone.PKRS_Strain = 0;
+                    clone.MetDate = DateTime.Parse("2020/10/20");
                     poke.SendNotification(this, $"```fix\nDetected an ad OT/Nickname with your {(Species)clone.Species}!```");
                 }
                 else
