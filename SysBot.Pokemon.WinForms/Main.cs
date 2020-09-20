@@ -233,7 +233,8 @@ namespace SysBot.Pokemon.WinForms
             var ip = TB_IP.Text;
             var port = (int)NUD_Port.Value;
             var connectionType = (ConnectionType)WinFormsUtil.GetIndex(CB_ConnectionType);
-            var usbPortIndex = connectionType == ConnectionType.USB ? SwitchConnectionUSB.GetUsbPortIndex() : string.Empty;
+            var addedIndexes = Bots.Where(z => z.UsbPortIndex != string.Empty).Select(z => z.UsbPortIndex);
+            var usbPortIndex = SwitchConnectionUSB.GetUsbPortIndex(addedIndexes);
 
             var cfg = SwitchBotConfig.GetConfig<PokeBotConfig>(ip, port, connectionType, usbPortIndex);
             cfg.Initialize(type, connectionType);

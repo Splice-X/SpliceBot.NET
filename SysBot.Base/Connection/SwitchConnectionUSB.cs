@@ -2,6 +2,7 @@
 using LibUsbDotNet.Main;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace SysBot.Base
@@ -176,13 +177,13 @@ namespace SysBot.Base
             return result;
         }
 
-        public static string GetUsbPortIndex()
+        public static string GetUsbPortIndex(IEnumerable<string> bots)
         {
             string av = string.Empty;
             foreach (UsbRegistry ur in UsbDevice.AllLibUsbDevices)
             {
-                bool portIndex = ur.DeviceProperties.TryGetValue("Address", out object addr);
-                bool added = PortIndexesAdded.Contains(addr.ToString());
+                ur.DeviceProperties.TryGetValue("Address", out object addr);
+                bool added = bots.Contains(addr.ToString());
                 if (ur.Vid == 0x057E && ur.Pid == 0x3000 && !added)
                 {
                     UsbDevice usbDevice = ur.Device;
