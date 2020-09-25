@@ -461,5 +461,14 @@ namespace SysBot.Pokemon
                 _ => OverworldOffset,
             };
         }
+
+        public async Task ToggleAirplane(int delay, CancellationToken token)
+        {
+            await HoldUSB(HOME, 2_500, 2_000 + delay, token).ConfigureAwait(false);
+            for (int i = 0; i < 4; i++)
+                await Click(DDOWN, 0_100, token).ConfigureAwait(false);
+            await Click(A, 2_000, token).ConfigureAwait(false);
+            await Click(A, 0_500, token).ConfigureAwait(false);
+        }
     }
 }
