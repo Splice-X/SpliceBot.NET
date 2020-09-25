@@ -28,6 +28,9 @@ namespace SysBot.Pokemon
         private int raidBossSpecies = -1;
         private bool airplaneUsable = false;
         private bool softLock = false;
+        private int airplaneLobbyExitCount;
+        private DateTime toggleTimeSync;
+        private bool toggle = false;
 
         protected override async Task MainLoop(CancellationToken token)
         {
@@ -42,6 +45,7 @@ namespace SysBot.Pokemon
                 return;
             }
 
+            toggleTimeSync = DateTime.Now;
             while (!token.IsCancellationRequested && Config.NextRoutineType == PokeRoutineType.RaidBot)
             {
                 Config.IterateNextRoutine();
@@ -146,33 +150,32 @@ namespace SysBot.Pokemon
                 await Task.Delay(1_000, token).ConfigureAwait(false);
                 timetowait -= 1_000;
 
-                if ((PlayerReady[1] || PlayerReady[2] || PlayerReady[3]) && Config.ConnectionType == ConnectionType.USB && Hub.Config.Raid.AirplaneQuitout) // Need at least one player to be ready
+                if ((PlayerReady[1] || PlayerReady[2] || PlayerReady[3]) && Config.ConnectionType == ConnectionType.USB && Settings.AirplaneQuitout) // Need at least one player to be ready
                     airplaneUsable = true;
-
-                if (softLock && timetowait == 0 && !airplaneUsable) // Would lose soft lock if we host by closing the game
-                {
-                    await SoftLockLobbyExit(token).ConfigureAwait(false);
-                    await HostRaidAsync(code, token).ConfigureAwait(false);
-                }
             }
 
             await Task.Delay(1_000, token).ConfigureAwait(false);
             if (Hub.Config.Raid.EchoRaidNotifications)
                 EchoUtil.Echo($"Raid is starting now with {linkcodemsg}.");
 
+            if (airplaneUsable && softLock) // Because we didn't ready up earlier if we're soft locked
+            {
+                await Click(DUP, 1_000, token).ConfigureAwait(false);
+                await Click(A, 1_000, token).ConfigureAwait(false);
+            }
+            else if (!airplaneUsable && softLock) // Don't waste time and don't risk losing soft lock; re-host.
+                await AirplaneLobbyExit(code, token).ConfigureAwait(false);
+
             /* Press A and check if we entered a raid.  If other users don't lock in,
                it will automatically start once the timer runs out. If we don't make it into
                a raid by the end, something has gone wrong and we should quit trying. */
             while (timetojoinraid > 0 && !await IsInBattle(token).ConfigureAwait(false))
             {
-                if (softLock) // Because we didn't ready up earlier if we're soft locked
-                {
-                    await Click(DUP, 1_000, token).ConfigureAwait(false);
-                    await Click(A, 1_000, token).ConfigureAwait(false);
-                }
-
                 await Click(A, 0_500, token).ConfigureAwait(false);
                 timetojoinraid -= 0_500;
+
+                if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && softLock) // If overworld, lobby disbanded.
+                    await AirplaneLobbyRecover(code, token).ConfigureAwait(false);
             }
 
             for (int i = 0; i < 4; i++)
@@ -236,6 +239,12 @@ namespace SysBot.Pokemon
             if (addFriends || deleteFriends)
                 await DeleteAddFriends(token).ConfigureAwait(false);
 
+            if ((DateTime.Now - toggleTimeSync).Hours >= 4)
+            {
+                toggle = true;
+                await TimeMenu(token).ConfigureAwait(false);
+            }
+
             await StartGame(Hub.Config, token).ConfigureAwait(false);
 
             if (Hub.Config.Raid.AutoRoll)
@@ -277,6 +286,7 @@ namespace SysBot.Pokemon
 
             addFriends = false;
             deleteFriends = false;
+            airplaneLobbyExitCount = 0;
             await Click(HOME, 2_000, token).ConfigureAwait(false);
         }
 
@@ -359,32 +369,27 @@ namespace SysBot.Pokemon
             DateSkipClicks();
             for (int day = 0; day < 3; day++)
             {
-                if (ResetCount == 0 || ResetCount >= 58)
+                if (ResetCount == 0 || ResetCount >= 40)
                 {
-                    await Click(B, 0_100, token).ConfigureAwait(false);
+                    await Click(B, 0_500, token).ConfigureAwait(false);
                     await TimeMenu(token).ConfigureAwait(false);
                     await ResetTime(token).ConfigureAwait(false);
                     day = 0;
                 }
 
-                if (Hub.Config.Raid.NumberFriendsToAdd > 0 && Hub.Config.Raid.RaidsBetweenAddFriends > 0)
-                    addFriends = (encounterCount - Settings.InitialRaidsToHost) % Hub.Config.Raid.RaidsBetweenAddFriends == 0;
-                if (Hub.Config.Raid.NumberFriendsToDelete > 0 && Hub.Config.Raid.RaidsBetweenDeleteFriends > 0)
-                    deleteFriends = (encounterCount - Settings.InitialRaidsToHost) % Hub.Config.Raid.RaidsBetweenDeleteFriends == 0;
-
-                if (day == 0) //Enters den and invites others on day 1
+                if (day == 0) // Enters den and invites others on day 1
                 {
                     Log("Initializing the rolling auto-host routine.");
                     await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
                     await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false);
                 }
 
-                await TimeMenu(token).ConfigureAwait(false); //Goes to system time screen
-                await TimeSkip(token).ConfigureAwait(false); //Skips a year
+                await TimeMenu(token).ConfigureAwait(false); // Goes to system time screen
+                await TimeSkip(token).ConfigureAwait(false); // Skips a year
                 await Click(B, 2_000, token).ConfigureAwait(false);
-                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLobbyQuitAR, token).ConfigureAwait(false); //Cancel lobby
+                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLobbyQuitAR, token).ConfigureAwait(false); // Cancel lobby
 
-                if (day == 2) //We're on the fourth frame. Collect watts, exit lobby, return to main loop
+                if (day == 2) // We're on the fourth frame. Collect watts, exit lobby, return to main loop
                 {
                     for (int i = 0; i < 2; i++)
                         await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
@@ -409,26 +414,41 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 2; i++)
                     await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
                 await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
-                await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); //Collect watts, invite others
+                await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); // Collect watts, invite others
             }
         }
 
         private async Task TimeMenu(CancellationToken token)
         {
-            await Click(HOME, 2_000, token).ConfigureAwait(false);
+            if (!toggle)
+                await Click(HOME, 2_000, token).ConfigureAwait(false);
+
             await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
             for (int i = 0; i < 4; i++)
                 await Click(DRIGHT, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
-            await Click(A, 1_000, token).ConfigureAwait(false); //Enter settings
+            await Click(A, 1_000, token).ConfigureAwait(false); // Enter settings
             for (int i = 0; i < 14; i++)
                 await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
-            await Click(A, 1_250, token).ConfigureAwait(false); //Scroll to system settings
+            await Click(A, 1_250, token).ConfigureAwait(false); // Scroll to system settings
             for (int i = 0; i < 4; i++)
                 await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
-            await Click(A, 1_250, token).ConfigureAwait(false); //Scroll to date/time settings
-            await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
-            await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
-            await Click(A, 0_750, token).ConfigureAwait(false); //Scroll to date/time screen
+            await Click(A, 1_250, token).ConfigureAwait(false); // Scroll to date/time settings
+
+            if (!toggle)
+            {
+                await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
+                await Click(DDOWN, Config.ConnectionType == ConnectionType.WiFi ? 0_250 : 0, token).ConfigureAwait(false);
+                await Click(A, 0_750, token).ConfigureAwait(false); // Scroll to date/time screen
+            }
+            else if (toggle)
+            {
+                Log("Toggling time sync to prevent rollover...");
+                toggleTimeSync = DateTime.Now;
+                toggle = false;
+                for (int i = 0; i < 2; i++)
+                    await Click(A, 0_500, token).ConfigureAwait(false);
+                await Click(HOME, 1_000, token).ConfigureAwait(false); // Toggle TimeSync
+            }
         }
 
         private async Task TimeSkip(CancellationToken token)
@@ -441,7 +461,7 @@ namespace SysBot.Pokemon
             await Click(A, 0_750, token).ConfigureAwait(false);
             await Click(HOME, 1_000, token).ConfigureAwait(false);
             await Click(HOME, 2_000 + Settings.ExtraTimeDaySkipLobbyReturnAR, token).ConfigureAwait(false);
-            ResetCount++; //Skip one year, return back into game, increase ResetCount
+            ResetCount++; // Skip one year, return back into game, increase ResetCount
         }
 
         private async Task ResetTime(CancellationToken token)
@@ -455,7 +475,7 @@ namespace SysBot.Pokemon
                 await Click(DRIGHT, Config.ConnectionType == ConnectionType.WiFi ? 0_150 : 0, token).ConfigureAwait(false);
             await Click(A, 0_750, token).ConfigureAwait(false);
             await Click(HOME, 1_000, token).ConfigureAwait(false);
-            await Click(HOME, 2_000, token).ConfigureAwait(false); //Roll back some years, go back into game
+            await Click(HOME, 2_000, token).ConfigureAwait(false); // Roll back some years, go back into game
             ResetCount = 1;
             Log("System date reset complete.");
         }
@@ -463,23 +483,50 @@ namespace SysBot.Pokemon
         private async Task ResetGameAirplaneAsync(CancellationToken token)
         {
             airplaneUsable = false;
+            var timer = 60_000;
             Log("Resetting raid by toggling airplane mode.");
-            await HoldUSB(HOME, 2_500, 4_000 + Settings.ExtraTimeAirplane, token).ConfigureAwait(false);
-            for (int i = 0; i < 4; i++)
-                await Click(DDOWN, 0_100, token).ConfigureAwait(false);
-            await Click(A, 2_000, token).ConfigureAwait(false);
-            await Click(A, 0_500, token).ConfigureAwait(false);
+            await ToggleAirplane(Settings.ExtraTimeAirplane, token).ConfigureAwait(false);
             Log("Airplaned out!");
 
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
-                await Click(B, 0_500, token).ConfigureAwait(false);
-            await Task.Delay(5_000 + Settings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
+            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer > 45)
+            {
+                await Click(B, 1_000, token).ConfigureAwait(false);
+                timer -= 1_000;
+            }
 
+            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer > 0) // If airplaned too late, we might be stuck in raid (move selection)
+            {
+                await Click(A, 1_000, token).ConfigureAwait(false);
+                timer -= 1_000;
+            }
+
+            if (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer == 0) // Something's gone wrong
+            {
+                softLock = false;
+                Log("Something's gone wrong. Restarting by closing the game.");
+                await ResetGameAsync(token).ConfigureAwait(false);
+                return;
+            }
+
+            await Task.Delay(5_000 + Settings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
             if (addFriends || deleteFriends)
             {
-                await Click(HOME, 3_000, token).ConfigureAwait(false);
+                await Click(HOME, 4_000, token).ConfigureAwait(false);
                 await DeleteAddFriends(token).ConfigureAwait(false);
-                await Click(HOME, 3_000, token).ConfigureAwait(false);
+                if ((DateTime.Now - toggleTimeSync).Hours >= 4)
+                {
+                    toggle = true;
+                    await TimeMenu(token).ConfigureAwait(false);
+                }
+
+                await Click(HOME, 2_000, token).ConfigureAwait(false);
+            }
+            else if ((DateTime.Now - toggleTimeSync).Hours >= 4)
+            {
+                toggle = true;
+                await Click(HOME, 4_000, token).ConfigureAwait(false);
+                await TimeMenu(token).ConfigureAwait(false);
+                await Click(HOME, 2_000, token).ConfigureAwait(false);
             }
 
             Log("Back in the overworld!");
@@ -510,14 +557,56 @@ namespace SysBot.Pokemon
             };
         }
 
-        private async Task SoftLockLobbyExit(CancellationToken token)
+        private async Task AirplaneLobbyExit(int code, CancellationToken token)
         {
-            Log("Exiting lobby to keep soft lock.");
+            Log("No players readied up in time; exiting lobby...");
+            airplaneUsable = false;
+            airplaneLobbyExitCount++;
+            for (int i = 0; i < 4; i++)
+                PlayerReady[i] = false; // Clear just in case.
+
             await Click(B, 2_000, token).ConfigureAwait(false);
             await Click(A, 2_000, token).ConfigureAwait(false);
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
-                await Click(B, 2_000, token).ConfigureAwait(false); // Click B to avoid possible errors?
+                await Click(B, 1_000, token).ConfigureAwait(false);
+
+            if (Hub.Config.Raid.NumberFriendsToAdd > 0 && Hub.Config.Raid.RaidsBetweenAddFriends > 0)
+                addFriends = (encounterCount + airplaneLobbyExitCount - Settings.InitialRaidsToHost) % Hub.Config.Raid.RaidsBetweenAddFriends == 0;
+            if (Hub.Config.Raid.NumberFriendsToDelete > 0 && Hub.Config.Raid.RaidsBetweenDeleteFriends > 0)
+                deleteFriends = (encounterCount + airplaneLobbyExitCount - Settings.InitialRaidsToHost) % Hub.Config.Raid.RaidsBetweenDeleteFriends == 0;
+
+            if (addFriends || deleteFriends)
+            {
+                await Click(HOME, 2_000, token).ConfigureAwait(false);
+                await DeleteAddFriends(token).ConfigureAwait(false);
+                await Click(HOME, 2_000, token).ConfigureAwait(false);
+            }
+
             Log("Back in the overworld! Re-hosting the raid.");
+            await HostRaidAsync(code, token).ConfigureAwait(false);
+        }
+
+        private async Task AirplaneLobbyRecover(int code, CancellationToken token)
+        {
+            airplaneUsable = false;
+            for (int i = 0; i < 4; i++)
+                PlayerReady[i] = false; // Clear just in case.
+
+            Log("Lobby disbanded! Recovering...");
+            await Task.Delay(2_000).ConfigureAwait(false); // Wait in case we entered lobby again due to A spam.
+            if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false)) // If still on Overworld, we don't need to do anything special.
+            {
+                Log("Re-hosting the raid.");
+                await HostRaidAsync(code, token).ConfigureAwait(false);
+            }
+            else
+            {
+                await ToggleAirplane(0, token).ConfigureAwait(false); // We could be in lobby, or have invited others, or in a box. Conflicts with ldn_mitm, but we don't need it anyways.
+                while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+                    await Click(B, 0_500, token).ConfigureAwait(false); // If we airplaned, need to clear errors and leave a box if we were stuck.
+                await HostRaidAsync(code, token).ConfigureAwait(false);
+                Log("Back in the overworld! Re-hosting the raid.");
+            }
         }
 
         private void RaidLog(string linkcodemsg, string raiddescmsg)
