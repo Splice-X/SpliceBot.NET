@@ -56,14 +56,14 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("When set, the bot will create a text file with current Raid Code for OBS.")]
         public bool RaidLog { get; set; } = false;
 
+        [Category(Hosting), Description("If using USB-Botbase, quit out the raid by toggling airplane mode. For regular hosting and soft-lock AutoRoll.")]
+        public bool AirplaneQuitout { get; set; } = false;
+
         [Category(Hosting), Description("When set, the bot will roll species and set date to 2000, resetting it once it reaches 2060.")]
         public bool AutoRoll { get; set; } = false;
 
         [Category(Hosting), Description("If AutoRoll enabled, specify Pokémon species to stop rolling on and to soft-lock host via airplane mode.")]
         public Species AutoRollSpecies { get; set; } = Species.None;
-
-        [Category(Hosting), Description("If using USB-Botbase, quit out the raid by toggling airplane mode. For regular hosting and soft-lock AutoRoll.")]
-        public bool AirplaneQuitout { get; set; } = false;
 
         [Category(Hosting), Description("Extra time in milliseconds to wait to toggle airplane mode.")]
         public int ExtraTimeAirplane { get; set; } = 0;
