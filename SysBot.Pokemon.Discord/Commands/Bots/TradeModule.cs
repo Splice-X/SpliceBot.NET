@@ -225,7 +225,7 @@ namespace SysBot.Pokemon.Discord
 
         private async Task AddTradeToQueueAsync(int code, string trainerName, PK8 pk8, bool sudo)
         {
-            if (!pk8.CanBeTraded() || !TradeExtensions.IsItemMule(pk8))
+            if (!pk8.CanBeTraded() || !new TradeExtensions(Info.Hub).IsItemMule(pk8))
             {
                 var msg = "Provided Pokémon content is blocked from trading!";
                 await ReplyAsync($"{(!Info.Hub.Config.Trade.ItemMuleCustomMessage.Equals(string.Empty) && !Info.Hub.Config.Trade.ItemMuleSpecies.Equals(Species.None) ? Info.Hub.Config.Trade.ItemMuleCustomMessage : msg)}").ConfigureAwait(false);
