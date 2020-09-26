@@ -1,12 +1,17 @@
-﻿using Discord.Commands;
-using PKHeX.Core;
+﻿using PKHeX.Core;
 using System.Collections.Generic;
 
-namespace SysBot.Pokemon.Discord
+namespace SysBot.Pokemon
 {
-    public class TradeExtensions : ModuleBase<SocketCommandContext>
+    public class TradeExtensions
     {
-        private static TradeQueueInfo<PK8> Info => SysCordInstance.Self.Hub.Queues.Info;
+        public PokeTradeHub<PK8> Hub;
+
+        public TradeExtensions(PokeTradeHub<PK8> hub)
+        {
+            Hub = hub;
+        }
+
         public static List<string> EggRollCooldown = new List<string>();
         public static string OT = string.Empty;
         public static int[] validEgg =
@@ -38,11 +43,11 @@ namespace SysBot.Pokemon.Discord
         public static int[] formIndex1 = { 0, 1 };
         public static int[] formIndex2 = { 0, 1, 2 };
 
-        public static bool IsItemMule(PK8 pk8)
+        public bool IsItemMule(PK8 pk8)
         {
-            if (Info.Hub.Config.Trade.ItemMuleSpecies == Species.None || Info.Hub.Config.Trade.DittoTrade && pk8.Species == 132 || Info.Hub.Config.Trade.EggTrade && pk8.Nickname == "Egg")
+            if (Hub.Config.Trade.ItemMuleSpecies == Species.None || Hub.Config.Trade.DittoTrade && pk8.Species == 132 || Hub.Config.Trade.EggTrade && pk8.Nickname == "Egg")
                 return true;
-            return !(pk8.Species != SpeciesName.GetSpeciesID(Info.Hub.Config.Trade.ItemMuleSpecies.ToString()) || pk8.IsShiny);
+            return !(pk8.Species != SpeciesName.GetSpeciesID(Hub.Config.Trade.ItemMuleSpecies.ToString()) || pk8.IsShiny);
         }
 
         public static void DittoTrade(PKM pk8)
