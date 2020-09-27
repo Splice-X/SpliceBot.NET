@@ -470,5 +470,52 @@ namespace SysBot.Pokemon
             await Click(A, 2_000, token).ConfigureAwait(false);
             await Click(A, 0_500, token).ConfigureAwait(false);
         }
+
+        public async Task<bool> SpinTrade(uint offset, byte[] comparison, int waitms, bool match, CancellationToken token)
+        {
+            // Revival of Red's SpinTrade
+            const int m = 15_000; // magnitude of stick movement
+            await Connection.SendAsync(SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, 25), Config.ConnectionType, token).ConfigureAwait(false);
+            var sw = new Stopwatch();
+            bool changed = false;
+            sw.Start();
+
+            do
+            {
+                // Spin the Left Stick in a circle counter-clockwise, starting from 0deg (polar) in increments of 90deg.
+                if (!await SpinCircle().ConfigureAwait(false))
+                    continue;
+                changed = true;
+                break;
+            } while (sw.ElapsedMilliseconds < waitms);
+
+            async Task<bool> SpinCircle()
+            {
+                return await Step(m, 0).ConfigureAwait(false) // →
+                       || await Step(0, m).ConfigureAwait(false) // ↑
+                       || await Step(-m, 0).ConfigureAwait(false) // ←
+                       || await Step(0, -m).ConfigureAwait(false); // ↓
+
+                async Task<bool> Step(short x, short y)
+                {
+                    var now = sw.ElapsedMilliseconds;
+                    await SetStick(SwitchStick.LEFT, x, y, 0, token).ConfigureAwait(false);
+                    var result = await Connection.ReadBytesAsync(offset, comparison.Length, Config.ConnectionType, token).ConfigureAwait(false);
+                    if (match == result.SequenceEqual(comparison))
+                        return true;
+
+                    // wait the rest of this step's delay
+                    var wait = 0 - (sw.ElapsedMilliseconds - now);
+                    if (wait > 0)
+                        await Task.Delay((int)wait, token).ConfigureAwait(false);
+                    return false;
+                }
+            }
+
+            // Gracefully clean up
+            await Connection.SendAsync(SwitchCommand.ResetStick(SwitchStick.LEFT), Config.ConnectionType, token).ConfigureAwait(false);
+            await Connection.SendAsync(SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, 50), Config.ConnectionType, token).ConfigureAwait(false);
+            return changed;
+        }
     }
 }
