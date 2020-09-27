@@ -41,6 +41,9 @@ namespace SysBot.Pokemon
             // Clear out any residual stick weirdness.
             await ResetStick(token).ConfigureAwait(false);
 
+            if (Hub.Config.StopConditions.CatchEncounter)
+                await CheckPokeBallCount(token).ConfigureAwait(false);
+
             var task = Hub.Config.Encounter.EncounteringType switch
             {
                 EncounterMode.VerticalLine => WalkInLine(token),
@@ -57,20 +60,6 @@ namespace SysBot.Pokemon
 
         private async Task WalkInLine(CancellationToken token)
         {
-            if (Hub.Config.StopConditions.CatchEncounter && !Hub.Config.Encounter.StrongSpawn)
-            {
-                Log("Checking Poké Ball count...");
-                pouchData = await Connection.ReadBytesAsync(PokeBallOffset, 116, Config.ConnectionType, token).ConfigureAwait(false);
-                var counts = EncounterCount.GetBallCounts(pouchData);
-                catchCount = counts.PossibleCatches(Ball.Master);
-
-                if (catchCount == 0)
-                {
-                    Log("Insufficient Master Balls. Please obtain at least one before starting.");
-                    return;
-                }
-            }
-
             while (!token.IsCancellationRequested)
             {
                 if (Hub.Config.Encounter.StrongSpawn)
@@ -229,6 +218,7 @@ namespace SysBot.Pokemon
         {
             encounterCount++;
             Log($"Encounter: {encounterCount}{Environment.NewLine}{ShowdownSet.GetShowdownText(pk)}{Environment.NewLine}");
+            Counts.AddEncounteredSpecies(pk);
             if (legends)
                 Counts.AddCompletedLegends();
             else
@@ -239,12 +229,16 @@ namespace SysBot.Pokemon
 
             if (StopConditionSettings.EncounterFound(pk, DesiredIVs, Hub.Config.StopConditions))
             {
-                Log("Result found! Stopping routine execution; restart the bot(s) to search again.");
+                Log(!Hub.Config.StopConditions.CatchEncounter ? $"{Ping}Result found! Stopping routine execution; restart the bot(s) to search again." : "Result found! Attempting to catch...");
                 if (Hub.Config.StopConditions.CaptureVideoClip)
                 {
                     await Task.Delay(Hub.Config.StopConditions.ExtraTimeWaitCaptureVideo).ConfigureAwait(false);
                     await PressAndHold(CAPTURE, 2_000, 1_000, token).ConfigureAwait(false);
                 }
+
+                if (Hub.Config.StopConditions.CatchEncounter)
+                    await CatchWildPokemon(pk, token).ConfigureAwait(false);
+
                 return true;
             }
 
@@ -280,27 +274,47 @@ namespace SysBot.Pokemon
                 }
                 else
                 {
-                    Log("Restart the game and the bot(s) or set \"Inject Poké Balls\" to True in the config.");
+                    Log($"{Ping}Result found! Stopping routine execution; restart the bot(s) to search again.");
                     return;
                 }
             }
 
             await Click(B, 1_000, token).ConfigureAwait(false);
             await Click(X, 1_000, token).ConfigureAwait(false);
-            await Click(A, 3_000, token).ConfigureAwait(false); //Throw ball
+            await Click(A, 3_000, token).ConfigureAwait(false); // Throw ball
 
             await Click(B, 1_000, token).ConfigureAwait(false);
-            await Click(B, 1_000, token).ConfigureAwait(false); //Just in case we didn't
+            await Click(B, 1_000, token).ConfigureAwait(false); // Just in case we didn't
 
             await Click(X, 1_000, token).ConfigureAwait(false);
-            await Click(A, 1_000, token).ConfigureAwait(false); //Attempt again to be sure
+            await Click(A, 1_000, token).ConfigureAwait(false); // Attempt again to be sure
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && check.Species != 0)
             {
                 await Click(B, 0_400, token).ConfigureAwait(false);
             }
 
             if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && !await IsInBattle(token).ConfigureAwait(false))
+            {
                 Log($"{Ping}Caught {SpeciesName.GetSpeciesName(pk.Species, 2)}! Resuming routine...");
+                await WalkInLine(token).ConfigureAwait(false);
+            }
+        }
+
+        private async Task CheckPokeBallCount(CancellationToken token)
+        {
+            if (Hub.Config.StopConditions.CatchEncounter && !Hub.Config.Encounter.StrongSpawn)
+            {
+                Log("Checking Poké Ball count...");
+                pouchData = await Connection.ReadBytesAsync(PokeBallOffset, 116, Config.ConnectionType, token).ConfigureAwait(false);
+                var counts = EncounterCount.GetBallCounts(pouchData);
+                catchCount = counts.PossibleCatches(Ball.Master);
+
+                if (catchCount == 0)
+                {
+                    Log("Insufficient Master Ball count. Please obtain at least one before starting.");
+                    return;
+                }
+            }
         }
 
         private async Task StrongSpawn(CancellationToken token)
