@@ -570,7 +570,7 @@ namespace SysBot.Pokemon
 
             // Wait for an offer...
             var oldEC = await Connection.ReadBytesAsync(SurpriseTradeSearchOffset, 4, Config.ConnectionType, token).ConfigureAwait(false);
-            var partnerFound = await ReadUntilChanged(SurpriseTradeSearchOffset, oldEC, Hub.Config.Trade.TradeWaitTime * 1_000, 0_200, false, token).ConfigureAwait(false);
+            var partnerFound = Hub.Config.Trade.SpinTrade ? await SpinTrade(SurpriseTradeSearchOffset, oldEC, Hub.Config.Trade.TradeWaitTime * 1_000, false, token).ConfigureAwait(false) : await ReadUntilChanged(SurpriseTradeSearchOffset, oldEC, Hub.Config.Trade.TradeWaitTime * 1_000, 0_200, false, token).ConfigureAwait(false);
 
             if (token.IsCancellationRequested)
                 return PokeTradeResult.Aborted;
@@ -719,7 +719,7 @@ namespace SysBot.Pokemon
         private async Task<bool> WaitForPokemonChanged(uint offset, int waitms, int waitInterval, CancellationToken token)
         {
             var oldEC = await Connection.ReadBytesAsync(offset, 4, Config.ConnectionType, token).ConfigureAwait(false);
-            return await ReadUntilChanged(offset, oldEC, waitms, waitInterval, false, token).ConfigureAwait(false);
+            return Hub.Config.Trade.SpinTrade ? await SpinTrade(offset, oldEC, waitms, false, token).ConfigureAwait(false) : await ReadUntilChanged(offset, oldEC, waitms, waitInterval, false, token).ConfigureAwait(false);
         }
     }
 }
