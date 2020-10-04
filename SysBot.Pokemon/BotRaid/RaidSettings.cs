@@ -65,27 +65,6 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("If AutoRoll enabled, specify Pokémon species to stop rolling on and to soft-lock host via airplane mode.")]
         public Species AutoRollSpecies { get; set; } = Species.None;
 
-        [Category(Hosting), Description("Extra time in milliseconds to wait to toggle airplane mode.")]
-        public int ExtraTimeAirplane { get; set; } = 0;
-
-        [Category(Hosting), Description("Time in milliseconds to wait for game to unfreeze after toggling airplane mode and YComm state to refresh.")]
-        public int AirplaneConnectionFreezeDelay { get; set; } = 0;
-
-        [Category(Hosting), Description("Extra time in milliseconds to enter a lobby for AutoRoll.")]
-        public int ExtraTimeLoadLobbyAR { get; set; } = 0;
-
-        [Category(Hosting), Description("Extra time in milliseconds to wait after \"Invite Others\" before clicking HOME.")]
-        public int ExtraTimeInviteOthersAR { get; set; } = 0;
-
-        [Category(Hosting), Description("Extra time in milliseconds to wait after cancelling a lobby for overworld to load.")]
-        public int ExtraTimeLobbyQuitAR { get; set; } = 0;
-
-        [Category(Hosting), Description("Extra time in milliseconds to wait after clicking \"HOME\" after skipping a day.")]
-        public int ExtraTimeDaySkipLobbyReturnAR { get; set; } = 0;
-
-        [Category(Hosting), Description("Extra time in milliseconds between A button clicks when collecting watts. More than 250ms shouldn't be needed.")]
-        public int ExtraTimeAButtonClickAR { get; set; } = 0;
-
         /// <summary>
         /// Gets a random trade code based on the range settings.
         /// </summary>

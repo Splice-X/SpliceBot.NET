@@ -380,20 +380,20 @@ namespace SysBot.Pokemon
                 if (day == 0) // Enters den and invites others on day 1
                 {
                     Log("Initializing the rolling auto-host routine.");
-                    await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
-                    await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false);
+                    await Click(A, 5_000 + Hub.Config.Timings.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
+                    await Click(A, 7_000 + Hub.Config.Timings.ExtraTimeInviteOthersAR, token).ConfigureAwait(false);
                 }
 
                 await TimeMenu(token).ConfigureAwait(false); // Goes to system time screen
                 await TimeSkip(token).ConfigureAwait(false); // Skips a year
                 await Click(B, 2_000, token).ConfigureAwait(false);
-                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLobbyQuitAR, token).ConfigureAwait(false); // Cancel lobby
+                await Click(A, 5_000 + Hub.Config.Timings.ExtraTimeLobbyQuitAR, token).ConfigureAwait(false); // Cancel lobby
 
                 if (day == 2) // We're on the fourth frame. Collect watts, exit lobby, return to main loop
                 {
                     for (int i = 0; i < 2; i++)
-                        await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
-                    await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
+                        await Click(A, 1_000 + Hub.Config.Timings.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
+                    await Click(A, 5_000 + Hub.Config.Timings.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
 
                     var data = await Connection.ReadBytesAsync(RaidBossOffset, 2, Config.ConnectionType, token).ConfigureAwait(false);
                     raidBossSpecies = BitConverter.ToUInt16(data, 0);
@@ -412,9 +412,9 @@ namespace SysBot.Pokemon
                 }
 
                 for (int i = 0; i < 2; i++)
-                    await Click(A, 1_000 + Hub.Config.Raid.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
-                await Click(A, 5_000 + Hub.Config.Raid.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
-                await Click(A, 7_000 + Hub.Config.Raid.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); // Collect watts, invite others
+                    await Click(A, 1_000 + Hub.Config.Timings.ExtraTimeAButtonClickAR, token).ConfigureAwait(false);
+                await Click(A, 5_000 + Hub.Config.Timings.ExtraTimeLoadLobbyAR, token).ConfigureAwait(false);
+                await Click(A, 7_000 + Hub.Config.Timings.ExtraTimeInviteOthersAR, token).ConfigureAwait(false); // Collect watts, invite others
             }
         }
 
@@ -460,7 +460,7 @@ namespace SysBot.Pokemon
                 await Click(DRIGHT, Config.ConnectionType == ConnectionType.WiFi ? 0_150 : 0, token).ConfigureAwait(false);
             await Click(A, 0_750, token).ConfigureAwait(false);
             await Click(HOME, 1_000, token).ConfigureAwait(false);
-            await Click(HOME, 2_000 + Settings.ExtraTimeDaySkipLobbyReturnAR, token).ConfigureAwait(false);
+            await Click(HOME, 2_000 + Hub.Config.Timings.ExtraTimeDaySkipLobbyReturnAR, token).ConfigureAwait(false);
             ResetCount++; // Skip one year, return back into game, increase ResetCount
         }
 
@@ -485,7 +485,7 @@ namespace SysBot.Pokemon
             airplaneUsable = false;
             var timer = 60_000;
             Log("Resetting raid by toggling airplane mode.");
-            await ToggleAirplane(Settings.ExtraTimeAirplane, token).ConfigureAwait(false);
+            await ToggleAirplane(Hub.Config.Timings.ExtraTimeAirplane, token).ConfigureAwait(false);
             Log("Airplaned out!");
 
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer > 45)
@@ -508,7 +508,7 @@ namespace SysBot.Pokemon
                 return;
             }
 
-            await Task.Delay(5_000 + Settings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
+            await Task.Delay(5_000 + Hub.Config.Timings.AirplaneConnectionFreezeDelay).ConfigureAwait(false);
             if (addFriends || deleteFriends)
             {
                 await Click(HOME, 4_000, token).ConfigureAwait(false);
