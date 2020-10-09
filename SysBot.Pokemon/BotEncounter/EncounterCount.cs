@@ -7,7 +7,6 @@ namespace SysBot.Pokemon
     {
         private int Master, Poke, Beast, Dive, Dream, Dusk, Fast, Friend, Great, Heal, Heavy, Level, Love, Lure, Luxury, Moon, Nest, Net, Premier, Quick, Repeat, Timer, Ultra;
 
-
         internal static readonly ushort[] Pouch_Ball_SWSH =
         {
             001, 002, 003, 004, 005, 006, 007, 008, 009, 010, 011, 012, 013, 014, 015, 016,
@@ -39,52 +38,32 @@ namespace SysBot.Pokemon
 
         private void SetCount(int ball, int count)
         {
-            if (ball == 1)
-                Master = count; //Regular balls
-            if (ball == 2)
-                Ultra = count;
-            if (ball == 3)
-                Great = count;
-            if (ball == 4)
-                Poke = count;
-            if (ball == 6)
-                Net = count;
-            if (ball == 7)
-                Dive = count;
-            if (ball == 8)
-                Nest = count;
-            if (ball == 9)
-                Repeat = count;
-            if (ball == 10)
-                Timer = count;
-            if (ball == 11)
-                Luxury = count;
-            if (ball == 12)
-                Premier = count;
-            if (ball == 13)
-                Dusk = count;
-            if (ball == 14)
-                Heal = count;
-            if (ball == 15)
-                Quick = count;
-            if (ball == 492)
-                Fast = count; //Apriballs
-            if (ball == 493)
-                Level = count;
-            if (ball == 494)
-                Lure = count;
-            if (ball == 495)
-                Heavy = count;
-            if (ball == 496)
-                Love = count;
-            if (ball == 497)
-                Friend = count;
-            if (ball == 498)
-                Moon = count;
-            if (ball == 576)
-                Dream = count;
-            if (ball == 851)
-                Beast = count;
+            switch (ball)
+            {
+                case 1: Master = count; break;
+                case 2: Ultra = count; break;
+                case 3: Great = count; break;
+                case 4: Poke = count; break;
+                case 6: Net = count; break;
+                case 7: Dive = count; break;
+                case 8: Nest = count; break;
+                case 9: Repeat = count; break;
+                case 10: Timer = count; break;
+                case 11: Luxury = count; break;
+                case 12: Premier = count; break;
+                case 13: Dusk = count; break;
+                case 14: Heal = count; break;
+                case 15: Quick = count; break;
+                case 492: Fast = count; break;
+                case 493: Level = count; break;
+                case 494: Lure = count; break;
+                case 495: Heavy = count; break;
+                case 496: Love = count; break;
+                case 497: Friend = count; break;
+                case 498: Moon = count; break;
+                case 576: Dream = count; break;
+                case 851: Beast = count; break;
+            };
         }
 
         public int PossibleCatches(Ball ball)
@@ -106,26 +85,19 @@ namespace SysBot.Pokemon
         public int BallIndex(Ball ball, out int result)
         {
             result = (int)ball;
-            if (ball == Ball.Fast)
-                result = 492;
-            if (ball == Ball.Level)
-                result = 493;
-            if (ball == Ball.Lure)
-                result = 494;
-            if (ball == Ball.Heavy)
-                result = 495;
-            if (ball == Ball.Love)
-                result = 496;
-            if (ball == Ball.Friend)
-                result = 497;
-            if (ball == Ball.Moon)
-                result = 498;
-            if (ball == Ball.Dream)
-                result = 576;
-            if (ball == Ball.Beast)
-                result = 851;
-
-            return result;
+            return ball switch
+            {
+                Ball.Fast => result = 492,
+                Ball.Level => result = 493,
+                Ball.Lure => result = 494,
+                Ball.Heavy => result = 495,
+                Ball.Love => result = 496,
+                Ball.Friend => result = 497,
+                Ball.Moon => result = 498,
+                Ball.Dream => result = 576,
+                Ball.Beast => result = 851,
+                _ => throw new NotImplementedException(),
+            };
         }
     }
 }
