@@ -279,6 +279,7 @@ namespace SysBot.Pokemon
                 }
             }
 
+            await SetLastUsedBall(Ball.Master, token).ConfigureAwait(false);
             await Click(B, 1_000, token).ConfigureAwait(false);
             await Click(X, 1_000, token).ConfigureAwait(false);
             await Click(A, 3_000, token).ConfigureAwait(false); // Throw ball

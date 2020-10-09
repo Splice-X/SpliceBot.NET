@@ -69,6 +69,7 @@ namespace SysBot.Base
             {
                 if (SwDevice != null)
                 {
+                    SendUSB(SwitchCommand.DetachController());
                     if (SwDevice.IsOpen)
                     {
                         if (SwDevice is IUsbDevice wholeUsbDevice)
