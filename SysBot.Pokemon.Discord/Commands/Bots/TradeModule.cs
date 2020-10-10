@@ -78,9 +78,6 @@ namespace SysBot.Pokemon.Discord
         {
             const int gen = 8;
             content = ReusableActions.StripCodeBlock(content);
-            TradeExtensions.SpecifyOT(content, out string specifyOT);
-            content = !specifyOT.Equals(string.Empty) ? System.Text.RegularExpressions.Regex.Replace(content, @"OT:(.*)?$\W?", "", System.Text.RegularExpressions.RegexOptions.Multiline) : content;
-
             var set = new ShowdownSet(content);
             var template = AutoLegalityWrapper.GetTemplate(set);
 
@@ -93,7 +90,6 @@ namespace SysBot.Pokemon.Discord
 
             var sav = AutoLegalityWrapper.GetTrainerInfo(gen);
             var pkm = sav.GetLegal(template, out _);
-            pkm.OT_Name = !specifyOT.Equals(string.Empty) ? specifyOT : pkm.OT_Name;
 
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];

@@ -76,7 +76,7 @@ namespace SysBot.Pokemon.Discord
             if (pkm.Ball > (int)Ball.None)
                 newShowdown.Insert(newShowdown.FindIndex(z => z.Contains(" Nature")), $"Ball: {(Ball)pkm.Ball} Ball");
 
-            newShowdown.Insert(1, $"OT: {pkm.OT_Name}");
+            newShowdown.InsertRange(1, new string[] { $"OT: {pkm.OT_Name} (TID {pkm.DisplayTID} / SID {pkm.DisplaySID})", $"Language: {(LanguageID)pkm.Language}" });
             return Format.Code(string.Join("\n", newShowdown).TrimEnd());
         }
 
