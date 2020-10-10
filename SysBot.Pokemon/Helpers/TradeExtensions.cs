@@ -13,7 +13,6 @@ namespace SysBot.Pokemon
         }
 
         public static List<string> EggRollCooldown = new List<string>();
-        public static string OT = string.Empty;
         public static int[] validEgg =
                 { 1, 4, 7, 10, 27, 37, 43, 50, 52, 54, 58, 60, 63, 66, 72,
                   77, 79, 81, 83, 90, 92, 95, 98, 102, 104, 108, 109, 111, 114, 115,
@@ -55,28 +54,7 @@ namespace SysBot.Pokemon
             if (pk8.IsNicknamed == false)
                 return;
 
-            var dittoLang = new string[] { "JPN", "ENG", "FRE", "ITA", "GER", "ESP", "KOR", "CHS", "CHT" };
             var dittoStats = new string[] { "ATK", "SPE", "SPA" };
-
-            if (pk8.Nickname.Contains(dittoLang[0]))
-                pk8.Language = (int)LanguageID.Japanese;
-            else if (pk8.Nickname.Contains(dittoLang[1]))
-                pk8.Language = (int)LanguageID.English;
-            else if (pk8.Nickname.Contains(dittoLang[2]))
-                pk8.Language = (int)LanguageID.French;
-            else if (pk8.Nickname.Contains(dittoLang[3]))
-                pk8.Language = (int)LanguageID.Italian;
-            else if (pk8.Nickname.Contains(dittoLang[4]))
-                pk8.Language = (int)LanguageID.German;
-            else if (pk8.Nickname.Contains(dittoLang[5]))
-                pk8.Language = (int)LanguageID.Spanish;
-            else if (pk8.Nickname.Contains(dittoLang[6]))
-                pk8.Language = (int)LanguageID.Korean;
-            else if (pk8.Nickname.Contains(dittoLang[7]))
-                pk8.Language = (int)LanguageID.ChineseS;
-            else if (pk8.Nickname.Contains(dittoLang[8]))
-                pk8.Language = (int)LanguageID.ChineseT;
-
             pk8.MetDate = System.DateTime.Parse("2020/10/20");
             pk8.StatNature = pk8.Nature;
             pk8.SetAbility(7);
@@ -87,6 +65,7 @@ namespace SysBot.Pokemon
             pk8.Met_Location = 154;
             pk8.Ball = 21;
             pk8.IVs = new int[] { 31, pk8.Nickname.Contains(dittoStats[0]) ? 0 : 31, 31, pk8.Nickname.Contains(dittoStats[1]) ? 0 : 31, pk8.Nickname.Contains(dittoStats[2]) ? 0 : 31, 31 };
+            pk8.ClearNickname();
             pk8.SetSuggestedHyperTrainingData();
         }
 
@@ -118,14 +97,6 @@ namespace SysBot.Pokemon
             pk8.Move1_PPUps = pk8.Move2_PPUps = pk8.Move3_PPUps = pk8.Move4_PPUps = 0;
             pk8.SetMaximumPPCurrent(pk8.Moves);
             pk8.SetSuggestedHyperTrainingData();
-        }
-
-        public static string SpecifyOT(string content, out string specifyOT)
-        {
-            if (!content.Contains("OT: "))
-                return specifyOT = string.Empty;
-
-            return specifyOT = System.Text.RegularExpressions.Regex.Match(content, @"OT:(.*)?$\W?", System.Text.RegularExpressions.RegexOptions.Multiline).Groups[1].Value.Trim();
         }
     }
 }

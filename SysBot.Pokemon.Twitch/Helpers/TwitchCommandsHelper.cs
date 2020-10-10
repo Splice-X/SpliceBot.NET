@@ -13,8 +13,6 @@ namespace SysBot.Pokemon.Twitch
                 return false;
             }
 
-            TradeExtensions.SpecifyOT(setstring, out string specifyOT);
-            setstring = !specifyOT.Equals(string.Empty) ? System.Text.RegularExpressions.Regex.Replace(setstring, @"OT:(.*)?$\W?", "", System.Text.RegularExpressions.RegexOptions.Multiline) : setstring;
             var set = ShowdownUtil.ConvertToShowdown(setstring);
             if (set == null)
             {
@@ -36,7 +34,6 @@ namespace SysBot.Pokemon.Twitch
 
             var sav = AutoLegalityWrapper.GetTrainerInfo(PKX.Generation);
             PKM pkm = sav.GetLegal(template, out _);
-            pkm.OT_Name = !specifyOT.Equals(string.Empty) ? specifyOT : pkm.OT_Name;
 
             if (pkm.Nickname == "Egg")
                 TradeExtensions.EggTrade((PK8)pkm);
