@@ -1,4 +1,5 @@
 ﻿using PKHeX.Core;
+using System;
 using System.Collections.Generic;
 
 namespace SysBot.Pokemon
@@ -6,6 +7,8 @@ namespace SysBot.Pokemon
     public class TradeExtensions
     {
         public PokeTradeHub<PK8> Hub;
+        public static int XCoordStart = 0;
+        public static int YCoordStart = 0;
 
         public TradeExtensions(PokeTradeHub<PK8> hub)
         {
@@ -55,7 +58,7 @@ namespace SysBot.Pokemon
                 return;
 
             var dittoStats = new string[] { "ATK", "SPE", "SPA" };
-            pk8.MetDate = System.DateTime.Parse("2020/10/20");
+            pk8.MetDate = DateTime.Parse("2020/10/20");
             pk8.StatNature = pk8.Nature;
             pk8.SetAbility(7);
             pk8.SetAbilityIndex(1);
@@ -73,7 +76,7 @@ namespace SysBot.Pokemon
         {
             pk8.IsEgg = true;
             pk8.Egg_Location = 60002;
-            pk8.EggMetDate = pk8.MetDate = System.DateTime.Parse("2020/10/20");
+            pk8.EggMetDate = pk8.MetDate = DateTime.Parse("2020/10/20");
             pk8.HeldItem = 0;
             pk8.CurrentLevel = 1;
             pk8.EXP = 0;
