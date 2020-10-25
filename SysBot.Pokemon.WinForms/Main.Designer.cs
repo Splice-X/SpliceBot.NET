@@ -30,6 +30,8 @@ namespace SysBot.Pokemon.WinForms
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main));
             this.TC_Main = new System.Windows.Forms.TabControl();
             this.Tab_Bots = new System.Windows.Forms.TabPage();
             this.FLP_Bots = new System.Windows.Forms.FlowLayoutPanel();
@@ -44,6 +46,7 @@ namespace SysBot.Pokemon.WinForms
             this.RTB_Logs = new System.Windows.Forms.RichTextBox();
             this.B_Stop = new System.Windows.Forms.Button();
             this.B_Start = new System.Windows.Forms.Button();
+            this.notifyIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.TC_Main.SuspendLayout();
             this.Tab_Bots.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.NUD_Port)).BeginInit();
@@ -110,7 +113,7 @@ namespace SysBot.Pokemon.WinForms
             this.CB_Routine.TabIndex = 7;
             // 
             // CB_ConnectionType
-            //
+            // 
             this.CB_ConnectionType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.CB_ConnectionType.FormattingEnabled = true;
             this.CB_ConnectionType.Location = new System.Drawing.Point(355, 5);
@@ -208,6 +211,12 @@ namespace SysBot.Pokemon.WinForms
             this.B_Start.UseVisualStyleBackColor = true;
             this.B_Start.Click += new System.EventHandler(this.B_Start_Click);
             // 
+            // notifyIcon
+            // 
+            this.notifyIcon.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon.Icon")));
+            this.notifyIcon.Text = "KoiBot: Pokémon";
+            this.notifyIcon.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.NotifyIcon_MouseDoubleClick);
+            // 
             // Main
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -220,8 +229,9 @@ namespace SysBot.Pokemon.WinForms
             this.MaximizeBox = false;
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "SysBot: Pokémon";
+            this.Text = "KoiBot: Pokémon";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
+            this.Resize += new System.EventHandler(this.Minimize_tray);
             this.TC_Main.ResumeLayout(false);
             this.Tab_Bots.ResumeLayout(false);
             this.Tab_Bots.PerformLayout();
@@ -229,6 +239,7 @@ namespace SysBot.Pokemon.WinForms
             this.Tab_Hub.ResumeLayout(false);
             this.Tab_Logs.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion
@@ -246,6 +257,7 @@ namespace SysBot.Pokemon.WinForms
         private System.Windows.Forms.NumericUpDown NUD_Port;
         private System.Windows.Forms.Button B_New;
         private System.Windows.Forms.FlowLayoutPanel FLP_Bots;
+        private System.Windows.Forms.NotifyIcon notifyIcon;
     }
 }
 
