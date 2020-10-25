@@ -20,6 +20,9 @@ namespace SysBot.Pokemon
         public const uint IsConnectedOffset = 0x30c7cca8;
         public const uint TextSpeedOffset = 0x450690A0;
         public const uint ItemTreasureAddress = 0x45068970;
+<<<<<<< HEAD
+>>>>>>> KoiTest
+=======
 >>>>>>> KoiTest
         public const uint LastUsedBallOffset = 0x4C228A50;
         public const uint PokeBallOffset = 0x4505FD78; // 0x74 size
