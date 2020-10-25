@@ -409,8 +409,13 @@ namespace SysBot.Pokemon
 
         public async Task<bool> IsInBattle(CancellationToken token)
         {
+<<<<<<< HEAD
             var data = await Connection.ReadBytesAsync(InBattleRaidOffset, 1, Config.ConnectionType, token).ConfigureAwait(false);
             return data[0] == 1;
+=======
+            var data = await Connection.ReadBytesAsync(Version == GameVersion.SH ? InBattleRaidOffsetSH : InBattleRaidOffsetSW, 1, Config.ConnectionType, token).ConfigureAwait(false);
+            return data[0] == (Version == GameVersion.SH ? 0x40 : 0x41);
+>>>>>>> KoiTest
         }
 
         public async Task<bool> IsInBox(CancellationToken token)
